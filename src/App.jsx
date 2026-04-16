@@ -1542,7 +1542,7 @@ export default function App(){
         autopilot={autopilot} autopilotIntensity={autopilotIntensity}
         setAutopilotIntensity={setAutopilotIntensity}
         perfActions={perfActions} regenerateSection={regenerateSection}
-        setNote={setNote} patterns={patterns}
+        setNote={setNote}
         savedScenes={savedScenes} saveScene={saveScene} loadScene={loadScene}
         master={master} setMaster={setMaster}
         space={space} setSpace={setSpace}
