@@ -177,108 +177,200 @@ function velCurve(type,i,total,pw){
   }
 }
 
-function buildSection(genre,sectionName,modeName,progression,arpeMode,prevBass){
-  const sec=SECTIONS[sectionName]||SECTIONS.groove;
-  const gd=GENRES[genre];
-  const grooveName=gd.density>0.65&&gd.chaos>0.4?'bunker':gd.chaos>0.6?'broken':gd.density<0.4?'float':'steady';
-  const groove=GROOVE_MAPS[grooveName];
-  const mode=MODES[modeName]||MODES.minor;
-  const bp=mode.b,sp=mode.s;
-  const bassLine=mkNotes(bp[0]),synthLine=mkNotes(sp[0]);
-  const laneLen={kick:16,snare:16,hat:32,bass:32,synth:32};
-  // Vary lane lengths by genre
-  if(genre==='dnb'){laneLen.hat=48;laneLen.bass=32;laneLen.synth=64;}
-  if(genre==='ambient'){laneLen.kick=32;laneLen.bass=64;laneLen.synth=64;}
-  if(genre==='acid'){laneLen.bass=16;laneLen.synth=32;}
+// ─── MELODIC PHRASE BUILDER ───────────────────────────────────────────────────
+// Creates real melodic phrases: 4-bar motifs, repetitions, silences, legato
+function buildMelodicLine(pool, chordProgression, steps, chaos, arpeMode, lenBias){
+  const line = mkNotes(pool[0]);
+  const lengths = Array(steps).fill(1); // per-step note length in steps
+  const chordLen = Math.max(1, Math.floor(steps / 4));
 
-  const masterLen=Math.max(...Object.values(laneLen));
-  const chordLen=Math.max(1,Math.floor(masterLen/4));
-  let lb=prevBass||bp[0];
-
-  for(let i=0;i<masterLen;i++){
-    const ci=Math.floor(i/chordLen)%progression.length;
-    const bn=chordNotes(progression[ci],bp);
-    const sn=chordNotes(progression[ci],sp);
-    if(rnd()<gd.chaos*0.12)lb=voiceLead(lb,bp);
-    else{const near=bn.reduce((best,n)=>Math.abs(bp.indexOf(n)-bp.indexOf(lb))<Math.abs(bp.indexOf(best)-bp.indexOf(lb))?n:best,bn[0]);lb=near;}
-    bassLine[i]=lb;
-    synthLine[i]=arp(sn,arpeMode,i);
+  // 1. Build a 4-step motif from chord tones
+  const motif = [];
+  const motifLen = 4;
+  const firstChord = chordProgression[0];
+  const firstPool = chordNotes(firstChord, pool);
+  let lastNote = firstPool[0];
+  for(let m = 0; m < motifLen; m++){
+    const r = rnd();
+    if(r < 0.15) motif.push(null); // rest in motif
+    else if(r < 0.35) motif.push(lastNote); // repeat
+    else{
+      // Voice lead to next chord tone
+      const near = firstPool.reduce((best, n) => {
+        return Math.abs(pool.indexOf(n) - pool.indexOf(lastNote)) < Math.abs(pool.indexOf(best) - pool.indexOf(lastNote)) ? n : best;
+      }, firstPool[0]);
+      lastNote = near;
+      motif.push(near);
+    }
   }
 
-  const p={kick:mkSteps(),snare:mkSteps(),hat:mkSteps(),bass:mkSteps(),synth:mkSteps()};
-  const density=gd.density,chaos=gd.chaos;
-  const bar=16;
-  const phraseW=[1,0.75,0.92,0.68];// anchor shape
+  // 2. Place motif across pattern with variations per chord section
+  for(let i = 0; i < steps; i++){
+    const ci = Math.floor(i / chordLen) % chordProgression.length;
+    const chord = chordProgression[ci];
+    const cn = chordNotes(chord, pool);
+    const motifPos = i % motifLen;
+    const motifNote = motif[motifPos];
 
-  for(const lane of['kick','snare','hat','bass','synth']){
-    const ll=laneLen[lane];
-    const lm=(sec[lane[0]+'M']||sec[lane.slice(0,2)+'M']||1);
-    const dm=density*lm;
-    for(let i=0;i<ll;i++){
-      const pos=i%bar,pb=Math.floor(i/8)%4;
-      const strong=pos===0||pos===8,bb=pos===4||pos===12,ob=pos%2===1;
-      const pw=phraseW[pb];
-      let hit=false;
-      if(lane==='kick'){
-        if(gd.kick==='every4'&&pos%4===0)hit=true;
-        else if(gd.kick==='syncopated'&&(pos===0||pos===10||pos===14))hit=true;
-        else if(gd.kick==='sparse'&&(pos===0||pos===12))hit=true;
-        else if(strong||rnd()<(groove.kB+dm*0.18)*pw)hit=true;
+    if(motifNote === null){
+      line[i] = pool[0]; // placeholder — step will be off anyway
+    } else {
+      // Transpose motif note to current chord context, respecting voice leading
+      if(rnd() < 0.72){
+        // Stay close to the motif note within new chord context
+        const transposed = cn.reduce((best, n) =>
+          Math.abs(pool.indexOf(n) - pool.indexOf(motifNote)) < Math.abs(pool.indexOf(best) - pool.indexOf(motifNote)) ? n : best
+        , cn[0]);
+        line[i] = transposed;
+      } else {
+        // Occasional free note within scale (chaos-driven)
+        line[i] = rnd() < chaos ? pick(pool) : voiceLead(line[Math.max(0, i-1)], cn);
       }
-      else if(lane==='snare'){
-        if(gd.hatPattern==='breakbeat'){hit=rnd()<(groove.sB+dm*0.15)*(1+pb*0.2);}
-        else if(bb||rnd()<(groove.sB+dm*0.08+(bb?0.28:0))*(1.05-pw*0.16))hit=true;
+    }
+
+    // Note lengths — longer in breaks/ambient, shorter in drops/fills
+    const r = rnd();
+    if(r < 0.45) lengths[i] = lenBias;
+    else if(r < 0.65) lengths[i] = lenBias * 2; // hold across 2 steps
+    else if(r < 0.82) lengths[i] = Math.max(0.5, lenBias * 0.5);
+    else lengths[i] = lenBias * 3; // long sustain
+    lengths[i] = Math.min(lengths[i], 8); // never exceed 8 steps
+  }
+
+  // Fill remainder
+  for(let i = steps; i < MAX_STEPS; i++){
+    line[i] = line[i % Math.max(1, steps)];
+  }
+
+  return { line, lengths };
+}
+
+function buildSection(genre, sectionName, modeName, progression, arpeMode, prevBass){
+  const sec = SECTIONS[sectionName] || SECTIONS.groove;
+  const gd = GENRES[genre];
+  const grooveName = gd.density > 0.65 && gd.chaos > 0.4 ? 'bunker' : gd.chaos > 0.6 ? 'broken' : gd.density < 0.4 ? 'float' : 'steady';
+  const groove = GROOVE_MAPS[grooveName];
+  const mode = MODES[modeName] || MODES.minor;
+  const bp = mode.b, sp = mode.s;
+  const laneLen = {kick:16, snare:16, hat:32, bass:32, synth:32};
+  if(genre === 'dnb'){laneLen.hat = 48; laneLen.bass = 32; laneLen.synth = 64;}
+  if(genre === 'ambient'){laneLen.kick = 32; laneLen.bass = 64; laneLen.synth = 64;}
+  if(genre === 'acid'){laneLen.bass = 16; laneLen.synth = 32;}
+  if(genre === 'cinematic'){laneLen.bass = 64; laneLen.synth = 64;}
+
+  const masterLen = Math.max(...Object.values(laneLen));
+  const density = gd.density, chaos = gd.chaos;
+
+  // ── BUILD MELODIC LINES with real phrase logic ──
+  const bassLb = sec.lb * (sectionName === 'break' ? 2.5 : sectionName === 'drop' ? 0.8 : 1);
+  const synthLb = sec.lb * (sectionName === 'break' ? 3 : sectionName === 'ambient' ? 4 : 1.2);
+  const {line: bassLine, lengths: bassLengths} = buildMelodicLine(bp, progression, laneLen.bass, chaos, arpeMode, bassLb);
+  const {line: synthLine, lengths: synthLengths} = buildMelodicLine(sp, progression, laneLen.synth, chaos * 0.7, arpeMode, synthLb);
+
+  const p = {kick:mkSteps(), snare:mkSteps(), hat:mkSteps(), bass:mkSteps(), synth:mkSteps()};
+  const bar = 16;
+  const phraseW = [1, 0.75, 0.92, 0.68];
+
+  // ── RHYTHMIC PATTERN with musical density control ──
+  for(const lane of ['kick','snare','hat','bass','synth']){
+    const ll = laneLen[lane];
+    // Use correct multiplier key per lane
+    const lmKey = lane === 'kick' ? 'kM' : lane === 'snare' ? 'sM' : lane === 'hat' ? 'hM' : lane === 'bass' ? 'bM' : 'syM';
+    const lm = sec[lmKey] || 1;
+    const dm = density * lm;
+    // Bass and synth: enforce maximum density to avoid mud
+    const maxDensity = lane === 'bass' ? 0.55 : lane === 'synth' ? 0.45 : 1.0;
+
+    for(let i = 0; i < ll; i++){
+      const pos = i % bar, pb = Math.floor(i / 8) % 4;
+      const strong = pos === 0 || pos === 8, bb = pos === 4 || pos === 12, ob = pos % 2 === 1;
+      const pw = phraseW[pb];
+      let hit = false;
+
+      if(lane === 'kick'){
+        if(gd.kick === 'every4' && pos % 4 === 0) hit = true;
+        else if(gd.kick === 'syncopated' && (pos === 0 || pos === 10 || pos === 14)) hit = true;
+        else if(gd.kick === 'sparse' && (pos === 0 || pos === 12)) hit = true;
+        else if(gd.kick === 'irregular') hit = pos === 0 || (rnd() < dm * 0.3 * pw);
+        else if(strong || rnd() < (groove.kB + dm * 0.18) * pw) hit = true;
       }
-      else if(lane==='hat'){
-        const hatP=gd.hatPattern;
-        if(hatP==='16th')hit=true;
-        else if(hatP==='offbeat')hit=ob;
-        else if(hatP==='breakbeat'){hit=rnd()<(groove.hB+dm*0.22)*(0.8+pw*0.25);}
-        else if(hatP==='noise')hit=rnd()<0.6+dm*0.2;
-        else if(hatP==='sparse')hit=rnd()<0.25+dm*0.12;
-        else hit=rnd()<(groove.hB+dm*0.18)*(0.82+pw*0.22);
-        if(hit&&rnd()<chaos*0.3)p.hat[i].p=0.5+rnd()*0.4; // ghost hits
+      else if(lane === 'snare'){
+        if(gd.hatPattern === 'breakbeat') hit = rnd() < (groove.sB + dm * 0.15) * (1 + pb * 0.2);
+        else if(bb || rnd() < (groove.sB + dm * 0.08 + (bb ? 0.28 : 0)) * (1.05 - pw * 0.16)) hit = true;
       }
-      else if(lane==='bass')hit=rnd()<(pos===0||pos===3||pos===7?0.9:groove.bB+dm*0.15)*(0.8+pw*0.26);
-      else if(lane==='synth')hit=(rnd()<(pos===2||pos===6||pos===10?0.7:groove.syB+dm*0.1)*(0.7+pw*0.35)&&!strong)||(pb===3&&rnd()<0.2+chaos*0.18);
+      else if(lane === 'hat'){
+        const hatP = gd.hatPattern;
+        if(hatP === '16th') hit = true;
+        else if(hatP === 'offbeat') hit = ob;
+        else if(hatP === 'breakbeat') hit = rnd() < (groove.hB + dm * 0.22) * (0.8 + pw * 0.25);
+        else if(hatP === 'noise') hit = rnd() < 0.55 + dm * 0.18;
+        else if(hatP === 'sparse') hit = rnd() < 0.2 + dm * 0.1;
+        else hit = rnd() < (groove.hB + dm * 0.18) * (0.82 + pw * 0.22);
+        if(hit && rnd() < chaos * 0.3) p.hat[i].p = 0.45 + rnd() * 0.4; // ghost hits
+      }
+      // Bass: play at phrase anchor points primarily
+      else if(lane === 'bass'){
+        const phraseAnchor = pos === 0 || pos === 4 || pos === 8 || pos === 12;
+        const prob = phraseAnchor ? 0.82 * lm : (groove.bB + dm * 0.12) * pw * 0.7;
+        hit = rnd() < Math.min(prob, maxDensity);
+      }
+      // Synth: more sparse, on off-beats of phrased positions
+      else if(lane === 'synth'){
+        const phraseOn = pos === 2 || pos === 6 || pos === 10 || pos === 14;
+        const prob = phraseOn ? 0.65 * lm : (groove.syB + dm * 0.08) * pw * 0.5;
+        hit = (rnd() < Math.min(prob, maxDensity) && !strong) || (pb === 3 && rnd() < 0.18 + chaos * 0.15);
+      }
 
       if(hit){
-        p[lane][i].on=true;
-        p[lane][i].p=clamp(sec.pb+rnd()*(1-sec.pb),sec.pb,1);
-        p[lane][i].v=clamp(velCurve(sec.vel,i,ll,pw),0.22,1);
-        if(lane==='bass'||lane==='synth'){
-          const r=rnd();const lb2=sec.lb;
-          p[lane][i].l=r<0.4?lb2:r<0.65?lb2*1.5:r<0.85?0.5:lb2*2;
-        }else p[lane][i].l=1;
+        p[lane][i].on = true;
+        p[lane][i].p = clamp(sec.pb + rnd() * (1 - sec.pb), sec.pb, 1);
+        p[lane][i].v = clamp(velCurve(sec.vel, i, ll, pw), 0.22, 1);
+        if(lane === 'bass') p[lane][i].l = bassLengths[i] || sec.lb;
+        else if(lane === 'synth') p[lane][i].l = synthLengths[i] || sec.lb;
+        else p[lane][i].l = 1;
       }
     }
   }
 
-  // Anchors
-  for(let i=0;i<laneLen.kick;i+=16)p.kick[i].on=true;
-  if(gd.kick!=='sparse'){
-    for(let i=0;i<laneLen.snare;i+=16){
-      if(i+4<laneLen.snare)p.snare[i+4].on=true;
-      if(i+12<laneLen.snare)p.snare[i+12].on=true;
+  // Rhythmic anchors — always present
+  for(let i = 0; i < laneLen.kick; i += 16) p.kick[i].on = true;
+  if(gd.kick !== 'sparse' && sectionName !== 'break'){
+    for(let i = 0; i < laneLen.snare; i += 16){
+      if(i + 4 < laneLen.snare) p.snare[i + 4].on = true;
+      if(i + 12 < laneLen.snare) p.snare[i + 12].on = true;
     }
   }
 
-  // Chaos mutations
-  const mp=Math.floor(chaos*8);
-  for(let m=0;m<mp;m++){
-    const ln=pick(['kick','snare','hat','bass','synth']);
-    const ll=laneLen[ln];
-    const pos=Math.floor(rnd()*ll);
-    if(ln==='hat')p.hat[pos].on=!p.hat[pos].on;
-    else if(ln==='kick'){if(pos%4!==0)p.kick[pos].on=rnd()<0.38+chaos*0.2;}
-    else if(ln==='bass'||ln==='synth')p[ln][pos].on=!p[ln][pos].on;
-    else{p.snare[pos].on=!p.snare[pos].on&&pos%4!==0;}
+  // Implement legature: when a step has l>1, mark subsequent steps as "tied" (on=false, held by prev)
+  // This prevents double-triggering and creates real sustained notes
+  for(const lane of ['bass', 'synth']){
+    const ll = laneLen[lane];
+    for(let i = 0; i < ll; i++){
+      if(p[lane][i].on && p[lane][i].l > 1){
+        const holdEnd = Math.min(ll - 1, i + Math.floor(p[lane][i].l));
+        for(let j = i + 1; j <= holdEnd; j++){
+          p[lane][j].tied = true; // mark as held — scheduler skips these
+          p[lane][j].on = false;  // visually show as held
+        }
+      }
+    }
   }
 
-  for(let i=laneLen.bass;i<MAX_STEPS;i++)bassLine[i]=bassLine[i%Math.max(1,laneLen.bass)];
-  for(let i=laneLen.synth;i<MAX_STEPS;i++)synthLine[i]=synthLine[i%Math.max(1,laneLen.synth)];
+  // Mild chaos mutations on drums only — never on melodic lanes
+  const mp = Math.floor(chaos * 5);
+  for(let m = 0; m < mp; m++){
+    const ln = pick(['kick','snare','hat']);
+    const ll = laneLen[ln];
+    const pos = Math.floor(rnd() * ll);
+    if(ln === 'hat') p.hat[pos].on = !p.hat[pos].on;
+    else if(ln === 'kick'){if(pos % 4 !== 0) p.kick[pos].on = rnd() < 0.35 + chaos * 0.18;}
+    else{p.snare[pos].on = !p.snare[pos].on && pos % 4 !== 0;}
+  }
 
-  return{patterns:p,bassLine,synthLine,laneLen,lastBass:lb};
+  // Track lastBass from generated line
+  const lb = bassLine[laneLen.bass - 1] || bp[0];
+
+  return {patterns:p, bassLine, synthLine, laneLen, lastBass:lb};
 }
 
 function buildSong(genre){
@@ -673,6 +765,7 @@ export default function App(){
       const li=si%len;
       const sd=lp[lane][li];
       if(!sd||!sd.on)continue;
+      if(sd.tied)continue; // skip tied (held) steps — note is already sounding
       if(sd.p<1&&rnd()>sd.p)continue;
       const jit=(rnd()-0.5)*humanizeRef.current*0.02;
       const noteT=t+Math.max(0,jit);
@@ -1051,7 +1144,8 @@ export default function App(){
     <div style={{
       width:'100vw',height:'100dvh',background:'#060608',color:'#e8e8e8',
       fontFamily:"'Space Mono',monospace",display:'flex',flexDirection:'column',
-      overflow:'hidden',userSelect:'none',position:'relative'
+      overflow:'hidden',userSelect:'none',position:'relative',
+      boxSizing:'border-box',
     }}>
 
       {/* ── SCANLINE OVERLAY ── */}
@@ -1213,7 +1307,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
   const shortcut={drop:'A',break:'S',build:'D',groove:'F',tension:'G',fill:'H'};
 
   return(
-    <div style={{flex:1,display:'flex',gap:8,padding:8,minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',gap:8,padding:'6px 8px 10px 8px',minHeight:0,overflow:'hidden'}}>
 
       {/* LEFT — Section triggers + autopilot */}
       <div style={{width:140,display:'flex',flexDirection:'column',gap:6,flexShrink:0}}>
@@ -1313,12 +1407,17 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
                   if(idx>=ll)return<div key={idx} style={{borderRadius:3,background:'rgba(255,255,255,0.02)',opacity:0.3}}/>;
                   const sd=patterns[lane][idx];
                   const on=sd.on,isActive=step===idx&&isPlaying;
+                  const isTied=sd.tied;
                   const isBeat=idx%4===0,isBar=idx%16===0;
                   return(
                     <button key={idx} onClick={()=>toggleCell(lane,idx)} style={{
-                      borderRadius:3,border:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`,
-                      background:isActive?`${lc}88`:on?`${lc}${Math.round(clamp((sd.p||1),0.3,1)*255).toString(16).padStart(2,'0')}`:'rgba(255,255,255,0.025)',
-                      boxShadow:isActive?`0 0 8px ${lc}88`:on?`0 0 2px ${lc}33`:'none',
+                      borderRadius:isTied?'1px 3px 3px 1px':'3px',
+                      borderTop:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`,
+                      borderRight:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`,
+                      borderBottom:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`,
+                      borderLeft:isTied?`2px solid ${lc}55`:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`,
+                      background:isActive?`${lc}88`:isTied?`${lc}22`:on?`${lc}${Math.round(clamp((sd.p||1),0.3,1)*255).toString(16).padStart(2,'0')}`:'rgba(255,255,255,0.025)',
+                      boxShadow:isActive?`0 0 8px ${lc}88`:on&&!isTied?`0 0 2px ${lc}33`:'none',
                       cursor:'pointer',transition:'background 0.03s',
                     }}/>
                   );
@@ -1406,7 +1505,7 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
   const notePool=noteEditLane==='bass'?mode.b:mode.s;
 
   return(
-    <div style={{flex:1,display:'flex',gap:6,padding:8,minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',gap:6,padding:'6px 8px 10px 8px',minHeight:0,overflow:'hidden'}}>
 
       {/* LEFT — Grid editor */}
       <div style={{flex:1,display:'flex',flexDirection:'column',gap:4,minWidth:0}}>
@@ -1610,7 +1709,7 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
   const gd=GENRES[genre];
 
   return(
-    <div style={{flex:1,display:'flex',gap:8,padding:12,minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',gap:8,padding:'6px 12px 12px 12px',minHeight:0,overflow:'hidden'}}>
 
       {/* LEFT — Genre info + arc control */}
       <div style={{width:260,display:'flex',flexDirection:'column',gap:8,flexShrink:0}}>
