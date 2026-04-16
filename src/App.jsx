@@ -1152,24 +1152,24 @@ export default function App(){
       <div style={{position:'fixed',inset:0,backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px)',pointerEvents:'none',zIndex:999}}/>
 
       {/* ── TOP BAR ── */}
-      <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 12px',borderBottom:'1px solid rgba(255,255,255,0.06)',flexShrink:0,height:46,background:'rgba(0,0,0,0.4)'}}>
+      <div style={{display:'flex',alignItems:'center',gap:6,padding:'4px 10px',borderBottom:'1px solid rgba(255,255,255,0.06)',flexShrink:0,height:36,background:'rgba(0,0,0,0.4)'}}>
         {/* Logo */}
-        <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.25em',color:gc_,borderRadius:4,padding:'3px 8px',border:`1px solid ${gc_}44`,whiteSpace:'nowrap'}}>
+        <div style={{fontSize:9,fontWeight:700,letterSpacing:'0.22em',color:gc_,borderRadius:3,padding:'2px 6px',border:`1px solid ${gc_}44`,whiteSpace:'nowrap'}}>
           CESIRA V2
         </div>
 
         {/* Project name */}
         <input value={projectName} onChange={e=>setProjectName(e.target.value)}
-          style={{background:'transparent',border:'none',outline:'none',color:'rgba(255,255,255,0.5)',fontSize:9,fontFamily:'Space Mono,monospace',letterSpacing:'0.1em',width:140}}/>
+          style={{background:'transparent',border:'none',outline:'none',color:'rgba(255,255,255,0.4)',fontSize:8,fontFamily:'Space Mono,monospace',letterSpacing:'0.08em',width:110}}/>
 
         {/* Genre selector */}
-        <div style={{display:'flex',gap:3,flexShrink:0}}>
+        <div style={{display:'flex',gap:2,flexShrink:0}}>
           {GENRE_NAMES.map(g=>(
             <button key={g} onClick={()=>newGenreSession(g)} style={{
-              padding:'3px 7px',borderRadius:3,border:`1px solid ${genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.08)'}`,
+              padding:'2px 5px',borderRadius:2,border:`1px solid ${genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.07)'}`,
               background:genre===g?`${GENRE_CLR[g]}18`:'transparent',
-              color:genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.3)',
-              fontSize:8,fontWeight:700,cursor:'pointer',letterSpacing:'0.12em',
+              color:genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.28)',
+              fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',
               fontFamily:'Space Mono,monospace',textTransform:'uppercase',
               transition:'all 0.1s',
             }}>{g}</button>
@@ -1179,44 +1179,44 @@ export default function App(){
         <div style={{flex:1}}/>
 
         {/* Visualizer */}
-        <canvas ref={vizRef} width={120} height={24} style={{opacity:0.7,borderRadius:2}}/>
+        <canvas ref={vizRef} width={96} height={18} style={{opacity:0.65,borderRadius:2}}/>
 
         {/* BPM */}
-        <div style={{display:'flex',alignItems:'center',gap:4}}>
-          <span style={{fontSize:8,color:'rgba(255,255,255,0.3)',letterSpacing:'0.15em'}}>BPM</span>
+        <div style={{display:'flex',alignItems:'center',gap:3}}>
+          <span style={{fontSize:7,color:'rgba(255,255,255,0.28)',letterSpacing:'0.12em'}}>BPM</span>
           <input type="number" value={bpm} min={40} max={250} onChange={e=>{const v=clamp(Number(e.target.value),40,250);setBpm(v);bpmRef.current=v;}}
-            style={{width:44,background:'rgba(255,255,255,0.06)',border:`1px solid rgba(255,255,255,0.12)`,borderRadius:3,padding:'2px 5px',color:gc_,fontSize:12,fontWeight:700,fontFamily:'Space Mono,monospace',textAlign:'center',outline:'none'}}/>
-          <button onClick={tapTempo} style={{padding:'3px 6px',borderRadius:3,border:'1px solid rgba(255,255,255,0.12)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.5)',fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>TAP</button>
+            style={{width:38,background:'rgba(255,255,255,0.06)',border:`1px solid rgba(255,255,255,0.1)`,borderRadius:3,padding:'1px 4px',color:gc_,fontSize:11,fontWeight:700,fontFamily:'Space Mono,monospace',textAlign:'center',outline:'none'}}/>
+          <button onClick={tapTempo} style={{padding:'2px 5px',borderRadius:2,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.45)',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>TAP</button>
         </div>
 
         {/* Transport */}
         <button onClick={togglePlay} style={{
-          padding:'5px 18px',borderRadius:4,border:'none',
+          padding:'4px 14px',borderRadius:3,border:'none',
           background:isPlaying?'#ff2244':'#00cc66',
-          color:'#000',fontSize:10,fontWeight:700,cursor:'pointer',
-          letterSpacing:'0.12em',fontFamily:'Space Mono,monospace',
-          boxShadow:isPlaying?'0 0 16px #ff224488':'0 0 16px #00cc6688',
+          color:'#000',fontSize:9,fontWeight:700,cursor:'pointer',
+          letterSpacing:'0.1em',fontFamily:'Space Mono,monospace',
+          boxShadow:isPlaying?'0 0 12px #ff224466':'0 0 12px #00cc6666',
           transition:'all 0.1s',flexShrink:0,
         }}>{isPlaying?'■ STOP':'▶ PLAY'}</button>
 
         {/* Autopilot */}
         <button onClick={()=>setAutopilot(v=>!v)} style={{
-          padding:'5px 10px',borderRadius:4,border:`1px solid ${autopilot?gc_:'rgba(255,255,255,0.12)'}`,
+          padding:'4px 8px',borderRadius:3,border:`1px solid ${autopilot?gc_:'rgba(255,255,255,0.1)'}`,
           background:autopilot?`${gc_}22`:'rgba(255,255,255,0.04)',
-          color:autopilot?gc_:'rgba(255,255,255,0.4)',
-          fontSize:8,fontWeight:700,cursor:'pointer',letterSpacing:'0.12em',fontFamily:'Space Mono,monospace',
-          boxShadow:autopilot?`0 0 12px ${gc_}66`:'none',
-          transition:'all 0.15s',flexShrink:0,
+          color:autopilot?gc_:'rgba(255,255,255,0.38)',
+          fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',fontFamily:'Space Mono,monospace',
+          boxShadow:autopilot?`0 0 10px ${gc_}55`:'none',
+          transition:'all 0.12s',flexShrink:0,
         }}>{autopilot?'◈ AUTO':'○ AUTO'}</button>
 
         {/* View toggle */}
         <div style={{display:'flex',gap:2,flexShrink:0}}>
           {['perform','studio','song'].map(v=>(
             <button key={v} onClick={()=>setView(v)} style={{
-              padding:'3px 8px',borderRadius:3,border:`1px solid ${view===v?gc_:'rgba(255,255,255,0.1)'}`,
+              padding:'2px 6px',borderRadius:2,border:`1px solid ${view===v?gc_:'rgba(255,255,255,0.08)'}`,
               background:view===v?`${gc_}18`:'transparent',
-              color:view===v?gc_:'rgba(255,255,255,0.35)',
-              fontSize:8,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',fontFamily:'Space Mono,monospace',
+              color:view===v?gc_:'rgba(255,255,255,0.3)',
+              fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.08em',fontFamily:'Space Mono,monospace',
               textTransform:'uppercase',
             }}>{v}</button>
           ))}
@@ -1307,34 +1307,34 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
   const shortcut={drop:'A',break:'S',build:'D',groove:'F',tension:'G',fill:'H'};
 
   return(
-    <div style={{flex:1,display:'flex',gap:8,padding:'6px 8px 10px 8px',minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',gap:6,padding:'5px 7px 8px 7px',minHeight:0,overflow:'hidden'}}>
 
       {/* LEFT — Section triggers + autopilot */}
-      <div style={{width:140,display:'flex',flexDirection:'column',gap:6,flexShrink:0}}>
+      <div style={{width:118,display:'flex',flexDirection:'column',gap:3,flexShrink:0}}>
         {/* Section pads */}
-        <div style={{fontSize:7,color:'rgba(255,255,255,0.25)',letterSpacing:'0.2em',marginBottom:2,textTransform:'uppercase'}}>SECTIONS</div>
+        <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',marginBottom:1,textTransform:'uppercase'}}>SECTIONS</div>
         {SECTS.map(sec=>{
           const scl=SECTION_COLORS[sec]||'#ffffff';
           const isActive=currentSectionName===sec;
           return(
             <button key={sec} onClick={()=>perfActions[sec]?perfActions[sec]():null} style={{
-              padding:'10px 8px',borderRadius:5,border:`1px solid ${isActive?scl:scl+'33'}`,
+              padding:'6px 6px',borderRadius:4,border:`1px solid ${isActive?scl:scl+'33'}`,
               background:isActive?`${scl}22`:`${scl}08`,
               color:isActive?scl:`${scl}88`,
-              fontSize:10,fontWeight:700,cursor:'pointer',
-              fontFamily:'Space Mono,monospace',letterSpacing:'0.12em',
+              fontSize:8,fontWeight:700,cursor:'pointer',
+              fontFamily:'Space Mono,monospace',letterSpacing:'0.1em',
               textTransform:'uppercase',transition:'all 0.08s',
-              boxShadow:isActive?`0 0 12px ${scl}44`:'none',
+              boxShadow:isActive?`0 0 8px ${scl}44`:'none',
               display:'flex',justifyContent:'space-between',alignItems:'center',
             }}>
               <span>{sec}</span>
-              {shortcut[sec]&&<span style={{fontSize:7,opacity:0.5}}>[{shortcut[sec]}]</span>}
+              {shortcut[sec]&&<span style={{fontSize:6,opacity:0.4}}>[{shortcut[sec]}]</span>}
             </button>
           );
         })}
 
         {/* Actions */}
-        <div style={{fontSize:7,color:'rgba(255,255,255,0.2)',letterSpacing:'0.2em',marginTop:4,textTransform:'uppercase'}}>ACTIONS</div>
+        <div style={{fontSize:6,color:'rgba(255,255,255,0.18)',letterSpacing:'0.18em',marginTop:3,textTransform:'uppercase'}}>ACTIONS</div>
         {[
           {label:'MUTATE',fn:perfActions.mutate,key:'M'},
           {label:'THIN',fn:perfActions.thinOut},
@@ -1344,44 +1344,38 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
           {label:'REGEN',fn:()=>regenerateSection(currentSectionName),key:'R'},
         ].map(({label,fn,key})=>(
           <button key={label} onClick={fn} style={{
-            padding:'7px 8px',borderRadius:4,border:'1px solid rgba(255,255,255,0.1)',
-            background:'rgba(255,255,255,0.03)',color:'rgba(255,255,255,0.55)',
-            fontSize:8,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace',
-            letterSpacing:'0.08em',display:'flex',justifyContent:'space-between',alignItems:'center',
+            padding:'5px 6px',borderRadius:3,border:'1px solid rgba(255,255,255,0.08)',
+            background:'rgba(255,255,255,0.02)',color:'rgba(255,255,255,0.48)',
+            fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace',
+            letterSpacing:'0.06em',display:'flex',justifyContent:'space-between',alignItems:'center',
           }}>
             <span>{label}</span>
-            {key&&<span style={{fontSize:6,opacity:0.4}}>[{key}]</span>}
+            {key&&<span style={{fontSize:6,opacity:0.35}}>[{key}]</span>}
           </button>
         ))}
       </div>
 
       {/* CENTER — Grid + VU */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',gap:6,minWidth:0}}>
+      <div style={{flex:1,display:'flex',flexDirection:'column',gap:4,minWidth:0}}>
 
         {/* Section indicator + info bar */}
-        <div style={{display:'flex',alignItems:'center',gap:10,height:28,flexShrink:0}}>
-          <div style={{fontSize:16,fontWeight:700,color:sc,letterSpacing:'0.18em',textTransform:'uppercase',textShadow:`0 0 20px ${sc}66`}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,height:22,flexShrink:0}}>
+          <div style={{fontSize:13,fontWeight:700,color:sc,letterSpacing:'0.16em',textTransform:'uppercase',textShadow:`0 0 16px ${sc}55`}}>
             {currentSectionName.toUpperCase()}
           </div>
-          <div style={{width:1,height:16,background:'rgba(255,255,255,0.1)'}}/>
-          <span style={{fontSize:8,color:'rgba(255,255,255,0.4)',letterSpacing:'0.1em'}}>{genre} · {modeName} · arp:{arpeMode}</span>
+          <div style={{width:1,height:12,background:'rgba(255,255,255,0.08)'}}/>
+          <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.08em'}}>{genre} · {modeName} · arp:{arpeMode}</span>
           <div style={{flex:1}}/>
-          {/* Song arc indicator */}
           {songArc.length>0&&(
-            <div style={{display:'flex',gap:3,alignItems:'center'}}>
+            <div style={{display:'flex',gap:2,alignItems:'center'}}>
               {songArc.map((s,i)=>(
-                <div key={i} style={{
-                  width:i===arcIdx?28:18,height:5,borderRadius:3,
-                  background:i===arcIdx?SECTION_COLORS[s]||gc:i<arcIdx?'rgba(255,255,255,0.2)':'rgba(255,255,255,0.06)',
-                  transition:'all 0.2s',
-                }}/>
+                <div key={i} style={{width:i===arcIdx?22:14,height:4,borderRadius:2,background:i===arcIdx?SECTION_COLORS[s]||gc:i<arcIdx?'rgba(255,255,255,0.18)':'rgba(255,255,255,0.05)',transition:'all 0.2s'}}/>
               ))}
             </div>
           )}
-          {/* Page nav */}
-          <button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0} style={{...navBtn,opacity:page===0?0.3:1}}>‹</button>
-          <span style={{fontSize:8,color:'rgba(255,255,255,0.3)',fontFamily:'Space Mono,monospace'}}>{page+1}/4</span>
-          <button onClick={()=>setPage(p=>Math.min(3,p+1))} disabled={page===3} style={{...navBtn,opacity:page===3?0.3:1}}>›</button>
+          <button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0} style={{...navBtn,opacity:page===0?0.3:1,padding:'1px 5px',fontSize:9}}>‹</button>
+          <span style={{fontSize:7,color:'rgba(255,255,255,0.28)',fontFamily:'Space Mono,monospace'}}>{page+1}/4</span>
+          <button onClick={()=>setPage(p=>Math.min(3,p+1))} disabled={page===3} style={{...navBtn,opacity:page===3?0.3:1,padding:'1px 5px',fontSize:9}}>›</button>
         </div>
 
         {/* Lane rows with VU + grid */}
@@ -1390,34 +1384,34 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
           const ll=laneLen[lane]||16;
           const vu=laneVU[lane]||0;
           return(
-            <div key={lane} style={{flex:1,display:'flex',alignItems:'stretch',gap:6,minHeight:0}}>
+            <div key={lane} style={{flex:1,display:'flex',alignItems:'stretch',gap:5,minHeight:0}}>
               {/* Lane label + VU */}
-              <div style={{width:48,flexShrink:0,display:'flex',flexDirection:'column',justifyContent:'center',gap:2}}>
-                <span style={{fontSize:7,fontWeight:700,color:lc,letterSpacing:'0.18em',textTransform:'uppercase'}}>{lane}</span>
-                <div style={{height:4,borderRadius:2,background:'rgba(255,255,255,0.06)',overflow:'hidden'}}>
-                  <div style={{height:'100%',width:`${vu*100}%`,background:lc,borderRadius:2,transition:'width 0.04s',boxShadow:`0 0 6px ${lc}`}}/>
+              <div style={{width:38,flexShrink:0,display:'flex',flexDirection:'column',justifyContent:'center',gap:1}}>
+                <span style={{fontSize:6,fontWeight:700,color:lc,letterSpacing:'0.14em',textTransform:'uppercase'}}>{lane}</span>
+                <div style={{height:3,borderRadius:2,background:'rgba(255,255,255,0.05)',overflow:'hidden'}}>
+                  <div style={{height:'100%',width:`${vu*100}%`,background:lc,borderRadius:2,transition:'width 0.04s',boxShadow:`0 0 4px ${lc}`}}/>
                 </div>
                 {(lane==='bass'||lane==='synth')&&(
-                  <span style={{fontSize:6,color:'rgba(255,255,255,0.3)',letterSpacing:'0.05em'}}>{activeNotes[lane]}</span>
+                  <span style={{fontSize:5.5,color:'rgba(255,255,255,0.25)',letterSpacing:'0.04em'}}>{activeNotes[lane]}</span>
                 )}
               </div>
               {/* Step grid */}
-              <div style={{flex:1,display:'grid',gridTemplateColumns:`repeat(${visIdx.length},1fr)`,gap:2,alignItems:'stretch'}}>
+              <div style={{flex:1,display:'grid',gridTemplateColumns:`repeat(${visIdx.length},1fr)`,gap:1.5,alignItems:'stretch'}}>
                 {visIdx.map(idx=>{
-                  if(idx>=ll)return<div key={idx} style={{borderRadius:3,background:'rgba(255,255,255,0.02)',opacity:0.3}}/>;
+                  if(idx>=ll)return<div key={idx} style={{borderRadius:2,background:'rgba(255,255,255,0.015)',opacity:0.25}}/>;
                   const sd=patterns[lane][idx];
                   const on=sd.on,isActive=step===idx&&isPlaying;
                   const isTied=sd.tied;
                   const isBeat=idx%4===0,isBar=idx%16===0;
                   return(
                     <button key={idx} onClick={()=>toggleCell(lane,idx)} style={{
-                      borderRadius:isTied?'1px 3px 3px 1px':'3px',
-                      borderTop:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`,
-                      borderRight:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`,
-                      borderBottom:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`,
-                      borderLeft:isTied?`2px solid ${lc}55`:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`,
-                      background:isActive?`${lc}88`:isTied?`${lc}22`:on?`${lc}${Math.round(clamp((sd.p||1),0.3,1)*255).toString(16).padStart(2,'0')}`:'rgba(255,255,255,0.025)',
-                      boxShadow:isActive?`0 0 8px ${lc}88`:on&&!isTied?`0 0 2px ${lc}33`:'none',
+                      borderRadius:isTied?'1px 2px 2px 1px':'2px',
+                      borderTop:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.07)':'rgba(255,255,255,0.03)'}`,
+                      borderRight:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.07)':'rgba(255,255,255,0.03)'}`,
+                      borderBottom:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.07)':'rgba(255,255,255,0.03)'}`,
+                      borderLeft:isTied?`2px solid ${lc}44`:`1px solid ${isActive?lc:isBar?`${lc}44`:isBeat?'rgba(255,255,255,0.07)':'rgba(255,255,255,0.03)'}`,
+                      background:isActive?`${lc}88`:isTied?`${lc}1a`:on?`${lc}${Math.round(clamp((sd.p||1),0.3,1)*255).toString(16).padStart(2,'0')}`:'rgba(255,255,255,0.02)',
+                      boxShadow:isActive?`0 0 7px ${lc}77`:on&&!isTied?`0 0 2px ${lc}22`:'none',
                       cursor:'pointer',transition:'background 0.03s',
                     }}/>
                   );
@@ -1428,13 +1422,14 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
         })}
 
         {/* Note info row */}
-        <div style={{display:'flex',gap:4,flexShrink:0,height:16}}>
+        <div style={{display:'flex',gap:1.5,flexShrink:0,height:12}}>
           {visIdx.map(idx=>{
             const bn=bassLine[idx],sn=synthLine[idx];
-            const hasNote=patterns.bass[idx]?.on||patterns.synth[idx]?.on;
+            const hasBass=patterns.bass[idx]?.on;
+            const hasSynth=patterns.synth[idx]?.on;
             return(
               <div key={idx} style={{flex:1,textAlign:'center'}}>
-                {hasNote&&<span style={{fontSize:5,color:'rgba(255,255,255,0.25)',fontFamily:'Space Mono,monospace'}}>{patterns.bass[idx]?.on?bn.replace(/[0-9]/g,''):(patterns.synth[idx]?.on?sn.replace(/[0-9]/g,''):'')}</span>}
+                {(hasBass||hasSynth)&&<span style={{fontSize:5,color:'rgba(255,255,255,0.22)',fontFamily:'Space Mono,monospace'}}>{hasBass?bn.replace(/[0-9]/g,''):sn.replace(/[0-9]/g,'')}</span>}
               </div>
             );
           })}
@@ -1442,9 +1437,9 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
       </div>
 
       {/* RIGHT — Macro knobs + scenes */}
-      <div style={{width:136,display:'flex',flexDirection:'column',gap:6,flexShrink:0}}>
+      <div style={{width:118,display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
         {/* Main macro faders */}
-        <div style={{fontSize:7,color:'rgba(255,255,255,0.25)',letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:2}}>MACROS</div>
+        <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',textTransform:'uppercase',marginBottom:1}}>MACROS</div>
         {[
           {label:'MASTER',v:master,s:setMaster,c:'#ffffff'},
           {label:'SPACE',v:space,s:setSpace,c:'#44ffcc'},
@@ -1454,35 +1449,32 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
           {label:'SWING',v:swing,s:setSwing,min:0,max:0.25,c:'#aa88ff'},
           {label:'AUTO INT',v:autopilotIntensity,s:setAutopilotIntensity,c:gc},
         ].map(({label,v,s,c,min=0,max=1})=>(
-          <div key={label} style={{display:'flex',flexDirection:'column',gap:2}}>
+          <div key={label} style={{display:'flex',flexDirection:'column',gap:1}}>
             <div style={{display:'flex',justifyContent:'space-between'}}>
-              <span style={{fontSize:7,letterSpacing:'0.1em',color:'rgba(255,255,255,0.35)',textTransform:'uppercase'}}>{label}</span>
-              <span style={{fontSize:7,color:c,fontFamily:'Space Mono,monospace'}}>{((v-min)/(max-min)*100).toFixed(0)}%</span>
+              <span style={{fontSize:6,letterSpacing:'0.08em',color:'rgba(255,255,255,0.3)',textTransform:'uppercase'}}>{label}</span>
+              <span style={{fontSize:6,color:c,fontFamily:'Space Mono,monospace'}}>{((v-min)/(max-min)*100).toFixed(0)}</span>
             </div>
-            <div style={{position:'relative',height:20,display:'flex',alignItems:'center'}}>
-              <input type="range" min={min} max={max} step={0.01} value={v} onChange={e=>s(Number(e.target.value))} style={{width:'100%',color:c,accentColor:c}}/>
-            </div>
+            <input type="range" min={min} max={max} step={0.01} value={v} onChange={e=>s(Number(e.target.value))} style={{width:'100%',color:c,accentColor:c,height:12}}/>
           </div>
         ))}
 
         <div style={{flex:1}}/>
 
         {/* Scenes */}
-        <div style={{fontSize:7,color:'rgba(255,255,255,0.25)',letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:2}}>SCENES</div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:3}}>
+        <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',textTransform:'uppercase',marginBottom:1}}>SCENES</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:2}}>
           {savedScenes.map((sc,i)=>(
             <div key={i} style={{display:'flex',flexDirection:'column',gap:1}}>
               <button onClick={()=>loadScene(i)} style={{
-                padding:'6px 3px',borderRadius:3,border:`1px solid ${sc?gc+'55':'rgba(255,255,255,0.08)'}`,
-                background:sc?`${gc}11`:'rgba(255,255,255,0.02)',
-                color:sc?gc:'rgba(255,255,255,0.25)',
-                fontSize:8,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace',
-                textAlign:'center',display:'flex',flexDirection:'column',gap:1,
+                padding:'4px 2px',borderRadius:2,border:`1px solid ${sc?gc+'44':'rgba(255,255,255,0.07)'}`,
+                background:sc?`${gc}0e`:'rgba(255,255,255,0.015)',
+                color:sc?gc:'rgba(255,255,255,0.22)',
+                fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace',
+                textAlign:'center',
               }}>
-                <span>S{i+1}</span>
-                {sc&&<span style={{fontSize:5,opacity:0.6,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{sc.genre}</span>}
+                S{i+1}{sc?'◆':''}
               </button>
-              <button onClick={()=>saveScene(i)} style={{padding:'2px',borderRadius:2,border:'1px solid rgba(255,255,255,0.06)',background:'rgba(255,255,255,0.02)',color:'rgba(255,255,255,0.25)',fontSize:6,cursor:'pointer',fontFamily:'Space Mono,monospace',textAlign:'center'}}>SAVE</button>
+              <button onClick={()=>saveScene(i)} style={{padding:'1px',borderRadius:2,border:'1px solid rgba(255,255,255,0.05)',background:'rgba(255,255,255,0.015)',color:'rgba(255,255,255,0.22)',fontSize:5.5,cursor:'pointer',fontFamily:'Space Mono,monospace',textAlign:'center'}}>SAVE</button>
             </div>
           ))}
         </div>
@@ -1491,7 +1483,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
   );
 }
 
-const navBtn={padding:'2px 6px',borderRadius:3,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.5)',fontSize:10,cursor:'pointer',fontFamily:'Space Mono,monospace'};
+const navBtn={padding:'1px 5px',borderRadius:2,border:'1px solid rgba(255,255,255,0.09)',background:'rgba(255,255,255,0.03)',color:'rgba(255,255,255,0.45)',fontSize:9,cursor:'pointer',fontFamily:'Space Mono,monospace'};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STUDIO VIEW — detailed editor
@@ -1505,17 +1497,17 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
   const notePool=noteEditLane==='bass'?mode.b:mode.s;
 
   return(
-    <div style={{flex:1,display:'flex',gap:6,padding:'6px 8px 10px 8px',minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',gap:5,padding:'5px 7px 8px 7px',minHeight:0,overflow:'hidden'}}>
 
       {/* LEFT — Grid editor */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',gap:4,minWidth:0}}>
+      <div style={{flex:1,display:'flex',flexDirection:'column',gap:3,minWidth:0}}>
         {/* Grid header */}
-        <div style={{display:'flex',alignItems:'center',gap:6,height:24,flexShrink:0}}>
-          <span style={{fontSize:8,color:'rgba(255,255,255,0.4)',letterSpacing:'0.12em'}}>{genre.toUpperCase()} · {modeName.toUpperCase()} · {currentSectionName.toUpperCase()}</span>
+        <div style={{display:'flex',alignItems:'center',gap:5,height:20,flexShrink:0}}>
+          <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.1em'}}>{genre.toUpperCase()} · {modeName.toUpperCase()} · {currentSectionName.toUpperCase()}</span>
           <div style={{flex:1}}/>
-          <button onClick={undo} disabled={undoLen===0} style={{...navBtn,opacity:undoLen>0?1:0.3}}>↩ UNDO ({undoLen})</button>
+          <button onClick={undo} disabled={undoLen===0} style={{...navBtn,opacity:undoLen>0?1:0.3,fontSize:7}}>↩ ({undoLen})</button>
           <button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0} style={{...navBtn,opacity:page===0?0.3:1}}>‹</button>
-          <span style={{fontSize:8,color:'rgba(255,255,255,0.3)',fontFamily:'Space Mono,monospace'}}>pg {page+1}/4</span>
+          <span style={{fontSize:7,color:'rgba(255,255,255,0.25)',fontFamily:'Space Mono,monospace'}}>pg {page+1}/4</span>
           <button onClick={()=>setPage(p=>Math.min(3,p+1))} disabled={page===3} style={{...navBtn,opacity:page===3?0.3:1}}>›</button>
         </div>
 
@@ -1523,11 +1515,11 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
         {['kick','snare','hat','bass','synth'].map(lane=>{
           const lc=LANE_CLR[lane];const ll=laneLen[lane]||16;const vu=laneVU[lane]||0;
           return(
-            <div key={lane} style={{flex:1,display:'flex',alignItems:'stretch',gap:5,minHeight:0}}>
-              <div style={{width:42,flexShrink:0,display:'flex',flexDirection:'column',justifyContent:'center',gap:2}}>
-                <span style={{fontSize:7,fontWeight:700,color:lc,letterSpacing:'0.14em',textTransform:'uppercase'}}>{lane}</span>
-                <div style={{height:3,borderRadius:2,background:'rgba(255,255,255,0.06)',overflow:'hidden'}}>
-                  <div style={{height:'100%',width:`${vu*100}%`,background:lc,borderRadius:2,transition:'width 0.04s'}}/>
+            <div key={lane} style={{flex:1,display:'flex',alignItems:'stretch',gap:4,minHeight:0}}>
+              <div style={{width:36,flexShrink:0,display:'flex',flexDirection:'column',justifyContent:'center',gap:1}}>
+                <span style={{fontSize:6,fontWeight:700,color:lc,letterSpacing:'0.12em',textTransform:'uppercase'}}>{lane}</span>
+                <div style={{height:2,borderRadius:1,background:'rgba(255,255,255,0.05)',overflow:'hidden'}}>
+                  <div style={{height:'100%',width:`${vu*100}%`,background:lc,borderRadius:1,transition:'width 0.04s'}}/>
                 </div>
               </div>
               <div style={{flex:1,display:'grid',gridTemplateColumns:`repeat(${visIdx.length},1fr)`,gap:1.5,alignItems:'stretch'}}>
@@ -1576,15 +1568,15 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
       </div>
 
       {/* RIGHT — Controls */}
-      <div style={{width:200,display:'flex',flexDirection:'column',gap:0,flexShrink:0,borderLeft:'1px solid rgba(255,255,255,0.06)'}}>
+      <div style={{width:178,display:'flex',flexDirection:'column',gap:0,flexShrink:0,borderLeft:'1px solid rgba(255,255,255,0.05)'}}>
         {/* Tabs */}
-        <div style={{display:'flex',borderBottom:'1px solid rgba(255,255,255,0.06)',flexShrink:0}}>
+        <div style={{display:'flex',borderBottom:'1px solid rgba(255,255,255,0.05)',flexShrink:0}}>
           {['mixer','synth','session'].map(t=>(
-            <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'6px 0',fontSize:7,fontWeight:700,letterSpacing:'0.12em',border:'none',background:'transparent',color:tab===t?gc:'rgba(255,255,255,0.25)',cursor:'pointer',borderBottom:tab===t?`2px solid ${gc}`:'2px solid transparent',textTransform:'uppercase',fontFamily:'Space Mono,monospace',transition:'color 0.1s'}}>{t}</button>
+            <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'5px 0',fontSize:6.5,fontWeight:700,letterSpacing:'0.1em',border:'none',background:'transparent',color:tab===t?gc:'rgba(255,255,255,0.22)',cursor:'pointer',borderBottom:tab===t?`2px solid ${gc}`:'2px solid transparent',textTransform:'uppercase',fontFamily:'Space Mono,monospace',transition:'color 0.1s'}}>{t}</button>
           ))}
         </div>
 
-        <div style={{flex:1,overflowY:'auto',padding:8,display:'flex',flexDirection:'column',gap:6}}>
+        <div style={{flex:1,overflowY:'auto',padding:'6px 7px',display:'flex',flexDirection:'column',gap:4}}>
 
           {tab==='mixer'&&<>
             {[
@@ -1604,22 +1596,22 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
               {l:'FM INDEX',v:fmIdx,s:setFmIdx,min:0,max:3,c:'#cc88ff'},
             ].map(({l,v,s,c,min=0,max=1})=>(
               <div key={l}>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:1}}>
-                  <span style={{fontSize:6.5,letterSpacing:'0.1em',color:'rgba(255,255,255,0.35)',textTransform:'uppercase'}}>{l}</span>
-                  <span style={{fontSize:7,color:c,fontFamily:'Space Mono,monospace'}}>{((v-min)/(max-min)*100).toFixed(0)}</span>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:0}}>
+                  <span style={{fontSize:6,letterSpacing:'0.08em',color:'rgba(255,255,255,0.3)',textTransform:'uppercase'}}>{l}</span>
+                  <span style={{fontSize:6,color:c,fontFamily:'Space Mono,monospace'}}>{((v-min)/(max-min)*100).toFixed(0)}</span>
                 </div>
-                <input type="range" min={min} max={max} step={(max-min)/200} value={v} onChange={e=>s(Number(e.target.value))} style={{width:'100%',accentColor:c,color:c}}/>
+                <input type="range" min={min} max={max} step={(max-min)/200} value={v} onChange={e=>s(Number(e.target.value))} style={{width:'100%',accentColor:c,color:c,height:12}}/>
               </div>
             ))}
             <div>
-              <div style={{fontSize:6.5,color:'rgba(255,255,255,0.3)',letterSpacing:'0.12em',marginBottom:3,textTransform:'uppercase'}}>GROOVE PROFILE</div>
+              <div style={{fontSize:6,color:'rgba(255,255,255,0.25)',letterSpacing:'0.1em',marginBottom:2,textTransform:'uppercase'}}>GROOVE PROFILE</div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:2}}>
                 {['steady','broken','bunker','float'].map(gp=>(
                   <button key={gp} onClick={()=>setGrooveProfile(gp)} style={{
-                    padding:'4px',borderRadius:3,border:`1px solid ${grooveProfile===gp?gc:'rgba(255,255,255,0.1)'}`,
+                    padding:'3px',borderRadius:2,border:`1px solid ${grooveProfile===gp?gc:'rgba(255,255,255,0.08)'}`,
                     background:grooveProfile===gp?`${gc}18`:'rgba(255,255,255,0.02)',
-                    color:grooveProfile===gp?gc:'rgba(255,255,255,0.35)',
-                    fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.08em',textTransform:'uppercase',
+                    color:grooveProfile===gp?gc:'rgba(255,255,255,0.3)',
+                    fontSize:6.5,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.06em',textTransform:'uppercase',
                   }}>{gp}</button>
                 ))}
               </div>
@@ -1627,36 +1619,34 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
           </>}
 
           {tab==='synth'&&<>
-            <div style={{fontSize:7,color:'rgba(255,255,255,0.3)',letterSpacing:'0.12em',marginBottom:2}}>SECTION GENERATOR</div>
+            <div style={{fontSize:6,color:'rgba(255,255,255,0.25)',letterSpacing:'0.1em',marginBottom:2,textTransform:'uppercase'}}>SECTION GENERATOR</div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:2}}>
               {Object.keys(SECTIONS).map(sec=>(
                 <button key={sec} onClick={()=>regenerateSection(sec)} style={{
-                  padding:'6px 4px',borderRadius:3,border:`1px solid ${currentSectionName===sec?gc:'rgba(255,255,255,0.1)'}`,
+                  padding:'5px 3px',borderRadius:2,border:`1px solid ${currentSectionName===sec?gc:'rgba(255,255,255,0.08)'}`,
                   background:currentSectionName===sec?`${gc}18`:'rgba(255,255,255,0.02)',
-                  color:currentSectionName===sec?gc:'rgba(255,255,255,0.45)',
-                  fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.06em',textTransform:'uppercase',
+                  color:currentSectionName===sec?gc:'rgba(255,255,255,0.4)',
+                  fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.05em',textTransform:'uppercase',
                 }}>{sec}</button>
               ))}
             </div>
-            <div style={{marginTop:4,fontSize:7,color:'rgba(255,255,255,0.2)',lineHeight:1.5}}>
-              Click to regenerate current view with that section's character. Keeps your manual edits if you just want the feel.
+            <div style={{marginTop:3,fontSize:6.5,color:'rgba(255,255,255,0.18)',lineHeight:1.5}}>
+              Click to regenerate with that section's feel.
             </div>
           </>}
 
           {tab==='session'&&<>
             {/* Recording */}
-            <div style={{display:'flex',gap:3}}>
-              <button onClick={recState==='idle'?startRec:stopRec} style={{
-                flex:1,padding:'8px',borderRadius:4,border:`1px solid ${recState==='recording'?'#ff2244':'rgba(255,255,255,0.15)'}`,
-                background:recState==='recording'?'rgba(255,34,68,0.15)':'rgba(255,255,255,0.04)',
-                color:recState==='recording'?'#ff2244':'rgba(255,255,255,0.6)',
-                fontSize:9,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.1em',
-              }}>{recState==='recording'?'■ STOP REC':'● REC'}</button>
-            </div>
+            <button onClick={recState==='idle'?startRec:stopRec} style={{
+              padding:'7px',borderRadius:3,border:`1px solid ${recState==='recording'?'#ff2244':'rgba(255,255,255,0.12)'}`,
+              background:recState==='recording'?'rgba(255,34,68,0.12)':'rgba(255,255,255,0.03)',
+              color:recState==='recording'?'#ff2244':'rgba(255,255,255,0.55)',
+              fontSize:8,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.1em',textAlign:'center',
+            }}>{recState==='recording'?'■ STOP REC':'● REC'}</button>
             {recordings.map((r,i)=>(
-              <div key={i} style={{display:'flex',alignItems:'center',gap:4,padding:'4px 6px',borderRadius:3,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)'}}>
-                <audio src={r.url} controls style={{flex:1,height:24,filter:'invert(1)',opacity:0.7}}/>
-                <a href={r.url} download={r.name} style={{color:gc,fontSize:7,textDecoration:'none',fontFamily:'Space Mono,monospace'}}>DL</a>
+              <div key={i} style={{display:'flex',alignItems:'center',gap:3,padding:'3px 5px',borderRadius:3,background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.05)'}}>
+                <audio src={r.url} controls style={{flex:1,height:22,filter:'invert(1)',opacity:0.65}}/>
+                <a href={r.url} download={r.name} style={{color:gc,fontSize:6.5,textDecoration:'none',fontFamily:'Space Mono,monospace'}}>DL</a>
               </div>
             ))}
 
