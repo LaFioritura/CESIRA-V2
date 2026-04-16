@@ -1250,34 +1250,34 @@ export default function App(){
   // ─── UI ───────────────────────────────────────────────────────────────────
   return(
     <div style={{
-      width:'100vw',height:'100dvh',background:'#060608',color:'#e8e8e8',
+      width:'100vw',height:'100dvh',background:'radial-gradient(circle at top left, rgba(0,196,255,0.12), transparent 24%), radial-gradient(circle at top right, rgba(204,136,255,0.1), transparent 20%), linear-gradient(180deg, #050816 0%, #070b14 48%, #03050b 100%)',color:'#eef4ff',
       fontFamily:"'Space Mono',monospace",display:'flex',flexDirection:'column',
       overflow:'hidden',userSelect:'none',position:'relative',
-      boxSizing:'border-box',
+      boxSizing:'border-box',padding:'14px',gap:10,
     }}>
 
       {/* ── SCANLINE OVERLAY ── */}
-      <div style={{position:'fixed',inset:0,backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px)',pointerEvents:'none',zIndex:999}}/>
+      <div style={{position:'fixed',inset:0,backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.015) 2px,rgba(255,255,255,0.015) 4px)',pointerEvents:'none',zIndex:999,opacity:0.35}}/>
 
       {/* ── TOP BAR ── */}
-      <div style={{display:'flex',alignItems:'center',gap:6,padding:'4px 10px',borderBottom:'1px solid rgba(255,255,255,0.06)',flexShrink:0,height:36,background:'rgba(0,0,0,0.4)'}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 16px',border:'1px solid rgba(255,255,255,0.08)',borderRadius:18,flexShrink:0,minHeight:72,background:'linear-gradient(180deg, rgba(10,16,34,0.92), rgba(7,12,25,0.88))',boxShadow:'0 20px 50px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03)',backdropFilter:'blur(14px)'}}>
         {/* Logo */}
         <div style={{fontSize:9,fontWeight:700,letterSpacing:'0.22em',color:gc_,borderRadius:3,padding:'2px 6px',border:`1px solid ${gc_}44`,whiteSpace:'nowrap'}}>
-          CESIRA V2
+CESIRA // WORKSTATION
         </div>
 
         {/* Project name */}
         <input value={projectName} onChange={e=>setProjectName(e.target.value)}
-          style={{background:'transparent',border:'none',outline:'none',color:'rgba(255,255,255,0.4)',fontSize:8,fontFamily:'Space Mono,monospace',letterSpacing:'0.08em',width:110}}/>
+          style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',outline:'none',color:'rgba(255,255,255,0.82)',fontSize:11,fontFamily:'Space Mono,monospace',letterSpacing:'0.08em',width:180,padding:'10px 12px',borderRadius:12}}/>
 
         {/* Genre selector */}
-        <div style={{display:'flex',gap:2,flexShrink:0}}>
+        <div style={{display:'flex',gap:6,flexShrink:0,flexWrap:'wrap',padding:'6px 8px',borderRadius:14,background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.05)'}}> 
           {GENRE_NAMES.map(g=>(
             <button key={g} onClick={()=>newGenreSession(g)} style={{
-              padding:'2px 5px',borderRadius:2,border:`1px solid ${genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.07)'}`,
+              padding:'8px 10px',borderRadius:10,border:`1px solid ${genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.07)'}`,
               background:genre===g?`${GENRE_CLR[g]}18`:'transparent',
               color:genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.28)',
-              fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',
+              fontSize:10,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',
               fontFamily:'Space Mono,monospace',textTransform:'uppercase',
               transition:'all 0.1s',
             }}>{g}</button>
@@ -1290,7 +1290,7 @@ export default function App(){
         <canvas ref={vizRef} width={96} height={18} style={{opacity:0.65,borderRadius:2}}/>
 
         {/* BPM — proper control with +/- and slider */}
-        <div style={{display:'flex',alignItems:'center',gap:2,background:'rgba(255,255,255,0.05)',borderRadius:4,padding:'2px 4px',border:'1px solid rgba(255,255,255,0.1)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:4,background:'rgba(255,255,255,0.035)',borderRadius:16,padding:'8px 10px',border:'1px solid rgba(255,255,255,0.08)',minHeight:52}}>
           <button onClick={()=>{const v=clamp(bpm-5,40,250);setBpm(v);bpmRef.current=v;}} style={{width:16,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.6)',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>−</button>
           <button onClick={()=>{const v=clamp(bpm-1,40,250);setBpm(v);bpmRef.current=v;}} style={{width:14,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.45)',fontSize:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>‹</button>
           <div style={{textAlign:'center',minWidth:32}}>
@@ -1304,7 +1304,7 @@ export default function App(){
 
         {/* Transport */}
         <button onClick={togglePlay} style={{
-          padding:'4px 14px',borderRadius:3,border:'none',
+          padding:'14px 18px',borderRadius:14,border:'1px solid rgba(255,255,255,0.08)',
           background:isPlaying?'#ff2244':'#00cc66',
           color:'#000',fontSize:9,fontWeight:700,cursor:'pointer',
           letterSpacing:'0.1em',fontFamily:'Space Mono,monospace',
@@ -1314,7 +1314,7 @@ export default function App(){
 
         {/* Autopilot */}
         <button onClick={()=>setAutopilot(v=>!v)} style={{
-          padding:'4px 8px',borderRadius:3,border:`1px solid ${autopilot?gc_:'rgba(255,255,255,0.1)'}`,
+          padding:'12px 14px',borderRadius:14,border:`1px solid ${autopilot?gc_:'rgba(255,255,255,0.1)'}`,
           background:autopilot?`${gc_}22`:'rgba(255,255,255,0.04)',
           color:autopilot?gc_:'rgba(255,255,255,0.38)',
           fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',fontFamily:'Space Mono,monospace',
@@ -1323,10 +1323,10 @@ export default function App(){
         }}>{autopilot?'◈ AUTO':'○ AUTO'}</button>
 
         {/* View toggle */}
-        <div style={{display:'flex',gap:2,flexShrink:0}}>
+        <div style={{display:'flex',gap:6,flexShrink:0,padding:'6px',borderRadius:14,background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)'}}> 
           {['perform','studio','song'].map(v=>(
             <button key={v} onClick={()=>setView(v)} style={{
-              padding:'2px 6px',borderRadius:2,border:`1px solid ${view===v?gc_:'rgba(255,255,255,0.08)'}`,
+              padding:'8px 12px',borderRadius:10,border:`1px solid ${view===v?gc_:'rgba(255,255,255,0.08)'}`,
               background:view===v?`${gc_}18`:'transparent',
               color:view===v?gc_:'rgba(255,255,255,0.3)',
               fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.08em',fontFamily:'Space Mono,monospace',
@@ -1343,7 +1343,7 @@ export default function App(){
       </div>
 
       {/* ── CONTEXT BAR — always-visible musical state ── */}
-      <div style={{display:'flex',alignItems:'center',gap:8,padding:'3px 10px',background:'rgba(0,0,0,0.25)',borderBottom:'1px solid rgba(255,255,255,0.04)',flexShrink:0,height:20,overflow:'hidden'}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 16px',background:'rgba(9,14,27,0.76)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:16,flexShrink:0,minHeight:54,overflow:'hidden',boxShadow:'inset 0 1px 0 rgba(255,255,255,0.03)'}}>
         <span style={{fontSize:6.5,color:'rgba(255,255,255,0.25)',letterSpacing:'0.12em',textTransform:'uppercase'}}>NOW PLAYING:</span>
         <span style={{fontSize:7,fontWeight:700,color:gc_,letterSpacing:'0.1em',textTransform:'uppercase'}}>{genre}</span>
         <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
@@ -1361,6 +1361,7 @@ export default function App(){
       </div>
 
       {/* ── VIEWS ── */}
+      <div style={{flex:1,minHeight:0,display:'flex'}}>
       {view==='perform'&&<PerformView
         genre={genre} gc={gc_} isPlaying={isPlaying}
         currentSectionName={currentSectionName} laneVU={laneVU}
@@ -1422,6 +1423,7 @@ export default function App(){
         modeName={modeName} arpeMode={arpMode}
         bpm={bpm}
       />}
+      </div>
 
     </div>
   );
@@ -1439,10 +1441,10 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
   const shortcut={drop:'A',break:'S',build:'D',groove:'F',tension:'G',fill:'H'};
 
   return(
-    <div style={{flex:1,display:'flex',gap:6,padding:'5px 7px 8px 7px',minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',gap:14,padding:'0',minHeight:0,overflow:'hidden'}}>
 
       {/* LEFT — Section triggers + autopilot */}
-      <div style={{width:118,display:'flex',flexDirection:'column',gap:3,flexShrink:0}}>
+      <div style={{width:260,display:'flex',flexDirection:'column',gap:10,flexShrink:0,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(13,18,35,0.94), rgba(8,12,24,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)'}}>
         {/* Section pads */}
         <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',marginBottom:1,textTransform:'uppercase'}}>SECTIONS</div>
         {SECTS.map(sec=>{
@@ -1492,7 +1494,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
       </div>
 
       {/* CENTER — Grid + VU */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',gap:4,minWidth:0}}>
+      <div style={{flex:1,display:'flex',flexDirection:'column',gap:10,minWidth:0,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(10,16,31,0.95), rgba(6,10,21,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)'}}>
 
         {/* Section indicator + info bar */}
         <div style={{display:'flex',alignItems:'center',gap:8,height:22,flexShrink:0}}>
@@ -1573,7 +1575,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
       </div>
 
       {/* RIGHT — Macro knobs + scenes */}
-      <div style={{width:118,display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
+      <div style={{width:248,display:'flex',flexDirection:'column',gap:10,flexShrink:0,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(12,18,34,0.95), rgba(7,11,22,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)'}}>
         {/* Main macro faders */}
         <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',textTransform:'uppercase',marginBottom:1}}>MACROS</div>
         {[
@@ -1633,10 +1635,10 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
   const notePool=noteEditLane==='bass'?mode.b:mode.s;
 
   return(
-    <div style={{flex:1,display:'flex',gap:5,padding:'5px 7px 8px 7px',minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',gap:14,padding:'0',minHeight:0,overflow:'hidden'}}>
 
       {/* LEFT — Grid editor */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',gap:3,minWidth:0}}>
+      <div style={{flex:1,display:'flex',flexDirection:'column',gap:10,minWidth:0,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(10,16,31,0.95), rgba(6,10,21,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)'}}>
         {/* Grid header */}
         <div style={{display:'flex',alignItems:'center',gap:5,height:20,flexShrink:0}}>
           <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.1em'}}>{genre.toUpperCase()} · {modeName.toUpperCase()} · {currentSectionName.toUpperCase()}</span>
@@ -1835,10 +1837,10 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
   const gd=GENRES[genre];
 
   return(
-    <div style={{flex:1,display:'flex',gap:8,padding:'6px 12px 12px 12px',minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',gap:14,padding:'0',minHeight:0,overflow:'hidden'}}>
 
       {/* LEFT — Genre info + arc control */}
-      <div style={{width:260,display:'flex',flexDirection:'column',gap:8,flexShrink:0}}>
+      <div style={{width:320,display:'flex',flexDirection:'column',gap:12,flexShrink:0,padding:'18px',borderRadius:22,background:'linear-gradient(180deg, rgba(12,18,34,0.95), rgba(7,11,22,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)'}}>
         {/* Genre card */}
         <div style={{padding:16,borderRadius:8,border:`1px solid ${gc}33`,background:`${gc}08`}}>
           <div style={{fontSize:18,fontWeight:700,color:gc,letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:4}}>{genre}</div>
@@ -1908,7 +1910,7 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
       </div>
 
       {/* RIGHT — Section library + direct trigger */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',gap:6}}>
+      <div style={{flex:1,display:'flex',flexDirection:'column',gap:12,padding:'18px',borderRadius:22,background:'linear-gradient(180deg, rgba(10,16,31,0.95), rgba(6,10,21,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)'}}>
         <div style={{fontSize:7,color:'rgba(255,255,255,0.25)',letterSpacing:'0.2em',textTransform:'uppercase'}}>SECTION LIBRARY — CLICK TO TRIGGER</div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6}}>
           {Object.entries(SECTIONS).map(([name,data])=>{
