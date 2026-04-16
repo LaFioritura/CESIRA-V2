@@ -1246,37 +1246,21 @@ export default function App(){
   // ─── RENDER HELPERS ───────────────────────────────────────────────────────
   const gc_=GENRE_CLR[genre]||'#ff4444';
   const visibleSteps=Array.from({length:PAGE},(_,i)=>page*PAGE+i);
-  const BASE_W=1600, BASE_H=940;
-  const [viewport,setViewport]=useState({w:typeof window!=='undefined'?window.innerWidth:1600,h:typeof window!=='undefined'?window.innerHeight:940});
-
-  useEffect(()=>{
-    const onResize=()=>setViewport({w:window.innerWidth,h:window.innerHeight});
-    window.addEventListener('resize',onResize);
-    onResize();
-    return()=>window.removeEventListener('resize',onResize);
-  },[]);
-
-  const fitScale=Math.min((viewport.w-16)/BASE_W,(viewport.h-16)/BASE_H,1);
 
   // ─── UI ───────────────────────────────────────────────────────────────────
   return(
     <div style={{
-      width:'100vw',height:'100dvh',background:'radial-gradient(circle at top left, rgba(0,196,255,0.12), transparent 24%), radial-gradient(circle at top right, rgba(204,136,255,0.1), transparent 20%), linear-gradient(180deg, #050816 0%, #070b14 48%, #03050b 100%)',
-      display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',padding:8,boxSizing:'border-box',
-    }}>
-      <div style={{width:BASE_W*fitScale,height:BASE_H*fitScale,position:'relative',overflow:'hidden',borderRadius:22,boxShadow:'0 22px 60px rgba(0,0,0,0.45)'}}>
-    <div style={{
-      width:BASE_W,height:BASE_H,background:'radial-gradient(circle at top left, rgba(0,196,255,0.12), transparent 24%), radial-gradient(circle at top right, rgba(204,136,255,0.1), transparent 20%), linear-gradient(180deg, #050816 0%, #070b14 48%, #03050b 100%)',color:'#eef4ff',
+      width:'100vw',height:'100dvh',background:'radial-gradient(circle at top left, rgba(0,196,255,0.12), transparent 24%), radial-gradient(circle at top right, rgba(204,136,255,0.1), transparent 20%), linear-gradient(180deg, #050816 0%, #070b14 48%, #03050b 100%)',color:'#eef4ff',
       fontFamily:"'Space Mono',monospace",display:'flex',flexDirection:'column',
-      overflow:'hidden',userSelect:'none',position:'relative',
-      boxSizing:'border-box',padding:'14px',gap:10,transform:`scale(${fitScale})`,transformOrigin:'top left',
+      overflow:'auto',userSelect:'none',position:'relative',
+      boxSizing:'border-box',padding:'14px',gap:10,
     }}>
 
       {/* ── SCANLINE OVERLAY ── */}
-      <div style={{position:'absolute',inset:0,backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.015) 2px,rgba(255,255,255,0.015) 4px)',pointerEvents:'none',zIndex:999,opacity:0.35}}/>
+      <div style={{position:'fixed',inset:0,backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.015) 2px,rgba(255,255,255,0.015) 4px)',pointerEvents:'none',zIndex:999,opacity:0.35}}/>
 
       {/* ── TOP BAR ── */}
-      <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 16px',border:'1px solid rgba(255,255,255,0.08)',borderRadius:18,flexShrink:0,minHeight:72,background:'linear-gradient(180deg, rgba(10,16,34,0.92), rgba(7,12,25,0.88))',boxShadow:'0 20px 50px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03)',backdropFilter:'blur(14px)'}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 16px',border:'1px solid rgba(255,255,255,0.08)',borderRadius:18,flexShrink:0,minHeight:72,background:'linear-gradient(180deg, rgba(10,16,34,0.92), rgba(7,12,25,0.88))',boxShadow:'0 20px 50px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03)',backdropFilter:'blur(14px)',flexWrap:'wrap',alignContent:'flex-start',overflow:'visible'}}>
         {/* Logo */}
         <div style={{fontSize:9,fontWeight:700,letterSpacing:'0.22em',color:gc_,borderRadius:3,padding:'2px 6px',border:`1px solid ${gc_}44`,whiteSpace:'nowrap'}}>
 CESIRA // WORKSTATION
@@ -1284,7 +1268,7 @@ CESIRA // WORKSTATION
 
         {/* Project name */}
         <input value={projectName} onChange={e=>setProjectName(e.target.value)}
-          style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',outline:'none',color:'rgba(255,255,255,0.82)',fontSize:11,fontFamily:'Space Mono,monospace',letterSpacing:'0.08em',width:180,padding:'10px 12px',borderRadius:12}}/>
+          style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',outline:'none',color:'rgba(255,255,255,0.82)',fontSize:11,fontFamily:'Space Mono,monospace',letterSpacing:'0.08em',width:'clamp(160px, 24vw, 220px)',maxWidth:'100%',padding:'10px 12px',borderRadius:12,flex:'0 1 220px'}}/>
 
         {/* Genre selector */}
         <div style={{display:'flex',gap:6,flexShrink:0,flexWrap:'wrap',padding:'6px 8px',borderRadius:14,background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.05)'}}> 
@@ -1442,8 +1426,6 @@ CESIRA // WORKSTATION
       </div>
 
     </div>
-      </div>
-    </div>
   );
 }
 
@@ -1459,10 +1441,10 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
   const shortcut={drop:'A',break:'S',build:'D',groove:'F',tension:'G',fill:'H'};
 
   return(
-    <div style={{flex:1,display:'flex',gap:14,padding:'0',minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',gap:14,padding:'0',minHeight:0,overflow:'auto',flexWrap:'wrap',alignContent:'flex-start'}}>
 
       {/* LEFT — Section triggers + autopilot */}
-      <div style={{width:260,display:'flex',flexDirection:'column',gap:10,flexShrink:0,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(13,18,35,0.94), rgba(8,12,24,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)'}}>
+      <div style={{flex:'1 1 240px',maxWidth:280,minWidth:220,display:'flex',flexDirection:'column',gap:10,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(13,18,35,0.94), rgba(8,12,24,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)',overflow:'auto',maxHeight:'100%'}}>
         {/* Section pads */}
         <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',marginBottom:1,textTransform:'uppercase'}}>SECTIONS</div>
         {SECTS.map(sec=>{
@@ -1512,7 +1494,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
       </div>
 
       {/* CENTER — Grid + VU */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',gap:10,minWidth:0,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(10,16,31,0.95), rgba(6,10,21,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)'}}>
+      <div style={{flex:'999 1 560px',display:'flex',flexDirection:'column',gap:10,minWidth:320,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(10,16,31,0.95), rgba(6,10,21,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)',overflow:'auto'}}>
 
         {/* Section indicator + info bar */}
         <div style={{display:'flex',alignItems:'center',gap:8,height:22,flexShrink:0}}>
@@ -1593,7 +1575,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
       </div>
 
       {/* RIGHT — Macro knobs + scenes */}
-      <div style={{width:248,display:'flex',flexDirection:'column',gap:10,flexShrink:0,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(12,18,34,0.95), rgba(7,11,22,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)'}}>
+      <div style={{flex:'1 1 240px',maxWidth:280,minWidth:220,display:'flex',flexDirection:'column',gap:10,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(12,18,34,0.95), rgba(7,11,22,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)',overflow:'auto',maxHeight:'100%'}}>
         {/* Main macro faders */}
         <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',textTransform:'uppercase',marginBottom:1}}>MACROS</div>
         {[
@@ -1653,10 +1635,10 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
   const notePool=noteEditLane==='bass'?mode.b:mode.s;
 
   return(
-    <div style={{flex:1,display:'flex',gap:14,padding:'0',minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',gap:14,padding:'0',minHeight:0,overflow:'auto',flexWrap:'wrap',alignContent:'flex-start'}}>
 
       {/* LEFT — Grid editor */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',gap:10,minWidth:0,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(10,16,31,0.95), rgba(6,10,21,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)'}}>
+      <div style={{flex:'999 1 560px',display:'flex',flexDirection:'column',gap:10,minWidth:320,padding:'16px',borderRadius:22,background:'linear-gradient(180deg, rgba(10,16,31,0.95), rgba(6,10,21,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)',overflow:'auto'}}>
         {/* Grid header */}
         <div style={{display:'flex',alignItems:'center',gap:5,height:20,flexShrink:0}}>
           <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.1em'}}>{genre.toUpperCase()} · {modeName.toUpperCase()} · {currentSectionName.toUpperCase()}</span>
@@ -1724,7 +1706,7 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
       </div>
 
       {/* RIGHT — Controls */}
-      <div style={{width:178,display:'flex',flexDirection:'column',gap:0,flexShrink:0,borderLeft:'1px solid rgba(255,255,255,0.05)'}}>
+      <div style={{flex:'1 1 260px',minWidth:240,display:'flex',flexDirection:'column',gap:0,borderLeft:'1px solid rgba(255,255,255,0.05)',maxHeight:'100%',overflow:'hidden'}}>
         {/* Tabs */}
         <div style={{display:'flex',borderBottom:'1px solid rgba(255,255,255,0.05)',flexShrink:0}}>
           {['mixer','synth','session'].map(t=>(
@@ -1855,10 +1837,10 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
   const gd=GENRES[genre];
 
   return(
-    <div style={{flex:1,display:'flex',gap:14,padding:'0',minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',gap:14,padding:'0',minHeight:0,overflow:'auto',flexWrap:'wrap',alignContent:'flex-start'}}>
 
       {/* LEFT — Genre info + arc control */}
-      <div style={{width:320,display:'flex',flexDirection:'column',gap:12,flexShrink:0,padding:'18px',borderRadius:22,background:'linear-gradient(180deg, rgba(12,18,34,0.95), rgba(7,11,22,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)'}}>
+      <div style={{flex:'1 1 300px',maxWidth:360,minWidth:240,display:'flex',flexDirection:'column',gap:12,padding:'18px',borderRadius:22,background:'linear-gradient(180deg, rgba(12,18,34,0.95), rgba(7,11,22,0.92))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28)',overflow:'auto',maxHeight:'100%'}}>
         {/* Genre card */}
         <div style={{padding:16,borderRadius:8,border:`1px solid ${gc}33`,background:`${gc}08`}}>
           <div style={{fontSize:18,fontWeight:700,color:gc,letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:4}}>{genre}</div>
