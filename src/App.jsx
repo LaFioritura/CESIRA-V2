@@ -5,19 +5,7 @@ import React,{useCallback,useEffect,useRef,useState}from'react';
 // Full-screen, self-composing, live-performable, export-ready
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Updated scheduling constants for more precise timing.
-// MDN's advanced sequencing techniques recommend a lookahead interval of ~25 ms and
-// a schedule-ahead window of about 0.1 seconds for Web Audio scheduling.  Using
-// these values helps ensure that notes are scheduled slightly ahead of time
-// without overloading the event loop【699996520530453†L836-L867】.  The remaining
-// constants are unchanged.
-const MAX_STEPS=64,
-      PAGE=16,
-      // seconds to schedule ahead; previously 0.14
-      SCHED=0.1,
-      // milliseconds between scheduler ticks; previously 20
-      LOOK=25,
-      UNDO=32;
+const MAX_STEPS=64,PAGE=16,SCHED=0.14,LOOK=20,UNDO=32;
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const rnd=()=>Math.random();
 const pick=a=>a[Math.floor(rnd()*a.length)];
@@ -145,6 +133,18 @@ const NOTE_MIDI={
   C3:48,D3:50,Eb3:51,G3:55,A3:57,
   C4:60,D4:62,Eb4:63,E4:64,F4:65,G4:67,Ab4:68,A4:69,Bb4:70,
   C5:72,D5:74,Eb5:75,G5:79,A5:81,
+};
+const CHROMA=['C','Db','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+const parseNoteName=n=>{const m=String(n||'').match(/^([A-G](?:b|#)?)(-?\d+)$/);return m?{name:m[1],oct:Number(m[2])}:null;};
+const transposeNote=(note,semitones)=>{
+  const parsed=parseNoteName(note);
+  if(!parsed)return note;
+  const idx=CHROMA.indexOf(parsed.name);
+  if(idx===-1)return note;
+  const abs=parsed.oct*12+idx+semitones;
+  const nextIdx=((abs%12)+12)%12;
+  const nextOct=Math.floor(abs/12);
+  return `${CHROMA[nextIdx]}${nextOct}`;
 };
 
 const mkSteps=()=>Array.from({length:MAX_STEPS},()=>({on:false,p:1,v:1,l:1}));
@@ -490,6 +490,8 @@ export default function App(){
   const [fmIdx,setFmIdx]=useState(0.6);
   const fmIdxRef=useRef(0.6);
   useEffect(()=>{fmIdxRef.current=fmIdx;},[fmIdx]);
+  const [polySynth,setPolySynth]=useState(true);
+  const [bassStack,setBassStack]=useState(true);
 
   // ── Autopilot
   const [autopilot,setAutopilot]=useState(false);
@@ -674,8 +676,23 @@ export default function App(){
     gc(src,[fil,g],600);ss(src,t);st(src,t+open?0.35:0.15);
   };
 
+
+  const getVoiceNotes=(baseNote,lane='synth')=>{
+    const mode=MODES[modeName]||MODES.minor;
+    const pool=lane==='bass'?mode.b:mode.s;
+    const idx=pool.indexOf(baseNote);
+    if(lane==='bass'){
+      if(!bassStack)return [baseNote];
+      const fifth=idx>-1?pool[Math.min(idx+4,pool.length-1)]:transposeNote(baseNote,7);
+      return [...new Set([baseNote,fifth])];
+    }
+    if(!polySynth)return [baseNote];
+    if(idx===-1)return [...new Set([baseNote,transposeNote(baseNote,4),transposeNote(baseNote,7)])];
+    return [...new Set([pool[idx],pool[Math.min(idx+2,pool.length-1)],pool[Math.min(idx+4,pool.length-1)]])];
+  };
+
   // ─── BASS SYNTHESIS ────────────────────────────────────────────────────────
-  const playBass=(note,accent,t,lenSteps=1)=>{
+  const playBassVoice=(note,accent,t,lenSteps=1)=>{
     if(!nodeGuard())return;
     const a=audioRef.current;
     const f=NOTE_FREQ[note]||110;
@@ -723,12 +740,17 @@ export default function App(){
       gc(o1,[o2,lfo,sg,fil,g,lg],cleanMs);
       ss(o1,t);ss(o2,t);ss(lfo,t);st(o1,t+rel+0.05);st(o2,t+rel+0.05);st(lfo,t+rel+0.05);
     }
-    setActiveNotes(p=>({...p,bass:note}));
     if(midiRef.current){const out=[...midiRef.current.outputs.values()][0];if(out){const v=Math.round(clamp(accent,0,1)*127);out.send([0x93,NOTE_MIDI[note]||48,v]);setTimeout(()=>out.send([0x83,NOTE_MIDI[note]||48,0]),rel*1000);}}
+  };
+  const playBass=(note,accent,t,lenSteps=1)=>{
+    const notes=Array.isArray(note)?note:getVoiceNotes(note,'bass');
+    const voiceAccent=accent/Math.sqrt(Math.max(1,notes.length));
+    notes.forEach((voice,idx)=>playBassVoice(voice,voiceAccent,t+idx*0.002,lenSteps));
+    setActiveNotes(p=>({...p,bass:notes.join(' · ')}));
   };
 
   // ─── SYNTH SYNTHESIS — extended with richer voices ───────────────────────
-  const playSynth=(note,accent,t,lenSteps=1)=>{
+  const playSynthVoice=(note,accent,t,lenSteps=1)=>{
     if(!nodeGuard())return;
     const a=audioRef.current;
     const f=NOTE_FREQ[note]||440;
@@ -736,7 +758,6 @@ export default function App(){
     const mode=GENRES[genre].synthMode||'lead';
     const cleanMs=(dur+1.5)*1000;
 
-    // ── PLUCK — Karplus-Strong style: filtered noise burst decaying ──
     if(mode==='glass'||mode==='bell'){
       const atk=0.001,rel=Math.max(0.3,dur*1.2+synthFilter*2);
       const nb=noiseBuffer(0.04,1,'white');
@@ -746,15 +767,13 @@ export default function App(){
       const lpf=a.ctx.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=2000+synthFilter*6000;
       const amp=a.ctx.createGain();
       amp.gain.setValueAtTime(0,t);amp.gain.linearRampToValueAtTime(0.55*accent,t+atk);amp.gain.exponentialRampToValueAtTime(0.001,t+rel);
-      // Feedback loop for pluck resonance
       src.connect(dly);dly.connect(lpf);lpf.connect(fbk);fbk.connect(dly);lpf.connect(amp);
       const dest=getLaneGain('synth')||a.bus;amp.connect(dest);trackNode(cleanMs);
       gc(src,[dly,lpf,fbk,amp],cleanMs);
       ss(src,t);st(src,t+0.04);
-      setActiveNotes(p=>({...p,synth:note}));return;
+      return;
     }
 
-    // ── PAD — 3 detuned oscillators + slow filter sweep ──
     if(mode==='pad'||mode==='choir'||mode==='mist'){
       const atk=0.06+dur*0.08,rel=Math.max(atk+0.1,dur*0.9+space*0.5);
       const o1=a.ctx.createOscillator(),o2=a.ctx.createOscillator(),o3=a.ctx.createOscillator();
@@ -773,10 +792,9 @@ export default function App(){
       const dest=getLaneGain('synth')||a.bus;amp.connect(dest);trackNode(cleanMs);
       gc(o1,[o2,o3,mix,fil,amp],cleanMs);
       ss(o1,t);ss(o2,t);ss(o3,t);st(o1,t+rel+0.1);st(o2,t+rel+0.1);st(o3,t+rel+0.1);
-      setActiveNotes(p=>({...p,synth:note}));return;
+      return;
     }
 
-    // ── ORGAN — true FM with 4 operators ──
     if(mode==='organ'||mode==='air'){
       const atk=0.005,rel=Math.max(0.05,dur*0.95);
       const c1=a.ctx.createOscillator(),c2=a.ctx.createOscillator();
@@ -796,10 +814,9 @@ export default function App(){
       const dest=getLaneGain('synth')||a.bus;amp.connect(dest);trackNode(cleanMs);
       gc(c1,[c2,m1,m2,mg1,mg2,mix,amp],cleanMs);
       ss(c1,t);ss(c2,t);ss(m1,t);ss(m2,t);st(c1,t+rel+0.1);st(c2,t+rel+0.1);st(m1,t+rel+0.1);st(m2,t+rel+0.1);
-      setActiveNotes(p=>({...p,synth:note}));return;
+      return;
     }
 
-    // ── STRINGS — saw + vibrato + slow attack ──
     if(mode==='strings'||mode==='star'){
       const atk=0.08+dur*0.06,rel=Math.max(atk+0.1,dur*0.92+space*0.4);
       const o1=a.ctx.createOscillator(),o2=a.ctx.createOscillator();
@@ -817,10 +834,9 @@ export default function App(){
       const dest=getLaneGain('synth')||a.bus;amp.connect(dest);trackNode(cleanMs);
       gc(o1,[o2,vib,vg,fil,amp],cleanMs);
       ss(o1,t);ss(o2,t);ss(vib,t);st(o1,t+rel+0.1);st(o2,t+rel+0.1);st(vib,t+rel+0.1);
-      setActiveNotes(p=>({...p,synth:note}));return;
+      return;
     }
 
-    // ── DEFAULT LEAD — square/saw with vibrato ──
     const atk=0.005,rel=Math.max(0.05,dur*0.9);
     const o1=a.ctx.createOscillator(),o2=a.ctx.createOscillator();
     const tmap={lead:'square',mist:'sawtooth',choir:'sine',star:'sine',glass:'sine',organ:'sine'};
@@ -839,8 +855,13 @@ export default function App(){
     const dest=getLaneGain('synth')||a.bus;amp.connect(dest);trackNode(cleanMs);
     gc(o1,[o2,vib,vg,mix,fil,amp],cleanMs);
     ss(o1,t);ss(o2,t);ss(vib,t);st(o1,t+rel+0.1);st(o2,t+rel+0.1);st(vib,t+rel+0.1);
-    setActiveNotes(p=>({...p,synth:note}));
     if(midiRef.current){const out=[...midiRef.current.outputs.values()][0];if(out){const v=Math.round(clamp(accent,0,1)*127);out.send([0x94,NOTE_MIDI[note]||60,v]);setTimeout(()=>out.send([0x84,NOTE_MIDI[note]||60,0]),rel*1000);}}
+  };
+  const playSynth=(note,accent,t,lenSteps=1)=>{
+    const notes=Array.isArray(note)?note:getVoiceNotes(note,'synth');
+    const voiceAccent=accent/Math.sqrt(Math.max(1,notes.length));
+    notes.forEach((voice,idx)=>playSynthVoice(voice,voiceAccent,t+idx*0.003,lenSteps));
+    setActiveNotes(p=>({...p,synth:notes.join(' · ')}));
   };
 
   // ─── SCHEDULER ────────────────────────────────────────────────────────────
@@ -1063,6 +1084,7 @@ export default function App(){
       regenerateSection(currentSectionName);
       setStatus(`Arp → ${next}`);
     },
+    clear:clearPattern,
   };
 
   // ─── AUTOPILOT ────────────────────────────────────────────────────────────
@@ -1132,7 +1154,7 @@ export default function App(){
   const serialize=()=>({
     v:2,genre,modeName,bpm,currentSectionName,grooveProfile,arpMode:arpModeRef.current,
     space,tone,noiseMix,drive,compress,bassFilter,synthFilter,drumDecay,bassSubAmt,fmIdx,
-    master,swing,humanize,grooveAmt,projectName,
+    master,swing,humanize,grooveAmt,projectName,polySynth,bassStack,
     patterns,bassLine,synthLine,laneLen,
   });
   const applySnap=(snap)=>{
@@ -1144,7 +1166,7 @@ export default function App(){
     setSpace(snap.space??0.3);setTone(snap.tone??0.7);setNoiseMix(snap.noiseMix??0.2);setDrive(snap.drive??0.1);
     setCompress(snap.compress??0.3);setBassFilter(snap.bassFilter??0.55);setSynthFilter(snap.synthFilter??0.65);
     setDrumDecay(snap.drumDecay??0.5);setBassSubAmt(snap.bassSubAmt??0.5);setFmIdx(snap.fmIdx??0.6);
-    setMaster(snap.master??0.85);setSwing(snap.swing??0.03);setHumanize(snap.humanize??0.012);setGrooveAmt(snap.grooveAmt??0.65);
+    setMaster(snap.master??0.85);setSwing(snap.swing??0.03);setHumanize(snap.humanize??0.012);setGrooveAmt(snap.grooveAmt??0.65);setPolySynth(snap.polySynth??true);setBassStack(snap.bassStack??true);
     if(snap.projectName)setProjectName(snap.projectName);
     if(snap.patterns){setPatterns(snap.patterns);patternsRef.current=snap.patterns;}
     if(snap.bassLine){setBassLine(snap.bassLine);bassRef.current=snap.bassLine;}
@@ -1187,20 +1209,23 @@ export default function App(){
       return next.slice(-6);
     });
   };
+  const clearPattern=()=>{
+    pushUndo();
+    const mode=MODES[modeName]||MODES.minor;
+    const empty={kick:mkSteps(),snare:mkSteps(),hat:mkSteps(),bass:mkSteps(),synth:mkSteps()};
+    setPatterns(empty);patternsRef.current=empty;
+    const newBass=mkNotes(mode.b[0]||'C2');
+    const newSynth=mkNotes(mode.s[0]||'C4');
+    setBassLine(newBass);bassRef.current=newBass;
+    setSynthLine(newSynth);synthRef.current=newSynth;
+    setStatus('Pattern cleared');
+  };
 
   // ─── STEP EDIT ────────────────────────────────────────────────────────────
-  // Memoize the cell toggle handler to prevent unnecessary re-renders when
-  // passing it to deeply nested components.  This function flips the `on`
-  // state of the clicked step and updates the patterns accordingly.
-  const toggleCell = useCallback((lane, idx) => {
+  const toggleCell=(lane,idx)=>{
     pushUndo();
-    setPatterns((p) => {
-      const updatedLane = p[lane].map((s, i) => (i === idx ? { ...s, on: !s.on } : s));
-      const newPatterns = { ...p, [lane]: updatedLane };
-      patternsRef.current = newPatterns;
-      return newPatterns;
-    });
-  }, [pushUndo]);
+    setPatterns(p=>{const n={...p,[lane]:p[lane].map((s,i)=>i===idx?{...s,on:!s.on}:s)};patternsRef.current=n;return n;});
+  };
   const setNote=(lane,idx,note)=>{
     if(lane==='bass')setBassLine(p=>{const n=[...p];n[idx]=note;bassRef.current=n;return n;});
     else setSynthLine(p=>{const n=[...p];n[idx]=note;synthRef.current=n;return n;});
@@ -1266,131 +1291,118 @@ export default function App(){
   // ─── RENDER HELPERS ───────────────────────────────────────────────────────
   const gc_=GENRE_CLR[genre]||'#ff4444';
   const visibleSteps=Array.from({length:PAGE},(_,i)=>page*PAGE+i);
-  const moduleShell={
-    border:'1px solid rgba(255,255,255,0.08)',
-    borderRadius:20,
-    background:'linear-gradient(180deg, rgba(10,15,28,0.94), rgba(6,10,20,0.9))',
-    boxShadow:'0 18px 44px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.03)',
-    backdropFilter:'blur(12px)',
-  };
-  const topLabel={fontSize:6,color:'rgba(255,255,255,0.3)',letterSpacing:'0.16em',textTransform:'uppercase'};
+  const [viewportWidth,setViewportWidth]=useState(typeof window!=='undefined'?window.innerWidth:1280);
+  useEffect(()=>{
+    const onResize=()=>setViewportWidth(window.innerWidth);
+    window.addEventListener('resize',onResize);
+    return()=>window.removeEventListener('resize',onResize);
+  },[]);
+  const isCompact=viewportWidth<1180;
+  const isPhone=viewportWidth<820;
 
   // ─── UI ───────────────────────────────────────────────────────────────────
   return(
     <div style={{
-      width:'100vw',height:'100dvh',background:'radial-gradient(circle at top left, rgba(0,196,255,0.12), transparent 24%), radial-gradient(circle at top right, rgba(204,136,255,0.1), transparent 20%), linear-gradient(180deg, #050816 0%, #070b14 48%, #03050b 100%)',color:'#eef4ff',
+      width:'100vw',height:'100dvh',background:'#060608',color:'#e8e8e8',
       fontFamily:"'Space Mono',monospace",display:'flex',flexDirection:'column',
       overflow:'hidden',userSelect:'none',position:'relative',
-      boxSizing:'border-box',padding:'14px',gap:10,
+      boxSizing:'border-box',minWidth:0,
     }}>
 
       {/* ── SCANLINE OVERLAY ── */}
-      <div style={{position:'fixed',inset:0,backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.015) 2px,rgba(255,255,255,0.015) 4px)',pointerEvents:'none',zIndex:999,opacity:0.35}}/>
+      <div style={{position:'fixed',inset:0,backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.08) 2px,rgba(0,0,0,0.08) 4px)',pointerEvents:'none',zIndex:999}}/>
 
       {/* ── TOP BAR ── */}
-      <div style={{...moduleShell,display:'grid',gridTemplateColumns:'minmax(280px,1.2fr) minmax(420px,2fr) minmax(360px,1.35fr)',gap:12,padding:'12px 14px',flexShrink:0,minHeight:96,alignItems:'stretch'}}>
-        <div style={{display:'flex',flexDirection:'column',justifyContent:'space-between',padding:'10px 12px',borderRadius:16,background:'linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015))',border:'1px solid rgba(255,255,255,0.06)'}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
-            <div>
-              <div style={topLabel}>Performance workstation</div>
-              <div style={{fontSize:12,fontWeight:700,letterSpacing:'0.22em',color:gc_,textTransform:'uppercase'}}>CESIRA // LIVE ENGINE</div>
-            </div>
-            <div style={{fontSize:8,fontWeight:700,letterSpacing:'0.18em',color:gc_,borderRadius:999,padding:'6px 10px',border:`1px solid ${gc_}44`,whiteSpace:'nowrap'}}>SYSTEM READY</div>
-          </div>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{flex:1}}>
-              <div style={{...topLabel,marginBottom:6}}>Session name</div>
-              <input value={projectName} onChange={e=>setProjectName(e.target.value)}
-                style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',outline:'none',color:'rgba(255,255,255,0.9)',fontSize:12,fontFamily:'Space Mono,monospace',letterSpacing:'0.08em',width:'100%',padding:'12px 14px',borderRadius:12}}/>
-            </div>
-            <div style={{width:118,alignSelf:'stretch',padding:'8px 10px',borderRadius:12,background:'rgba(0,0,0,0.22)',border:'1px solid rgba(255,255,255,0.05)',display:'flex',flexDirection:'column',justifyContent:'space-between'}}>
-              <div style={topLabel}>Signal</div>
-              <canvas ref={vizRef} width={96} height={24} style={{opacity:0.75,borderRadius:4,width:'100%',height:24}}/>
-              <div style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.08em'}}>Realtime bus</div>
-            </div>
-          </div>
+      <div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:6,padding:isPhone?'8px':'6px 10px',borderBottom:'1px solid rgba(255,255,255,0.06)',flexShrink:0,minHeight:36,background:'rgba(0,0,0,0.4)',overflow:'hidden'}}>
+        {/* Logo */}
+        <div style={{fontSize:9,fontWeight:700,letterSpacing:'0.22em',color:gc_,borderRadius:3,padding:'2px 6px',border:`1px solid ${gc_}44`,whiteSpace:'nowrap'}}>
+          CESIRA V2
         </div>
 
-        <div style={{display:'flex',flexDirection:'column',gap:8,padding:'10px 12px',borderRadius:16,background:'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.012))',border:'1px solid rgba(255,255,255,0.06)'}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
-            <div style={topLabel}>Genre architecture</div>
-            <div style={{fontSize:7,color:'rgba(255,255,255,0.32)',letterSpacing:'0.08em'}}>instant session rebuild</div>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',gap:6,flex:1}}>
-            {GENRE_NAMES.map(g=>(
-              <button key={g} onClick={()=>newGenreSession(g)} style={{
-                padding:'10px 8px',borderRadius:12,border:`1px solid ${genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.07)'}`,
-                background:genre===g?`linear-gradient(180deg, ${GENRE_CLR[g]}22, ${GENRE_CLR[g]}10)`:'rgba(255,255,255,0.02)',
-                color:genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.38)',
-                fontSize:9,fontWeight:700,cursor:'pointer',letterSpacing:'0.12em',
-                fontFamily:'Space Mono,monospace',textTransform:'uppercase',
-                transition:'all 0.1s',
-              }}>{g}</button>
-            ))}
-          </div>
+        {/* Project name */}
+        <input value={projectName} onChange={e=>setProjectName(e.target.value)}
+          style={{background:'transparent',border:'none',outline:'none',color:'rgba(255,255,255,0.4)',fontSize:8,fontFamily:'Space Mono,monospace',letterSpacing:'0.08em',width:isPhone?'100%':110,flex:isPhone?1:'0 0 auto',minWidth:isPhone?160:110}}/>
+
+        {/* Genre selector */}
+        <div style={{display:'flex',gap:2,flexShrink:0,flexWrap:'wrap',maxWidth:isPhone?'100%':'none'}}>
+          {GENRE_NAMES.map(g=>(
+            <button key={g} onClick={()=>newGenreSession(g)} style={{
+              padding:'2px 5px',borderRadius:2,border:`1px solid ${genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.07)'}`,
+              background:genre===g?`${GENRE_CLR[g]}18`:'transparent',
+              color:genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.28)',
+              fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',
+              fontFamily:'Space Mono,monospace',textTransform:'uppercase',
+              transition:'all 0.1s',
+            }}>{g}</button>
+          ))}
         </div>
 
-        <div style={{display:'grid',gridTemplateColumns:'auto auto auto 1fr',gap:8,alignItems:'stretch',padding:'10px 12px',borderRadius:16,background:'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.012))',border:'1px solid rgba(255,255,255,0.06)'}}>
-          <div style={{display:'flex',alignItems:'center',gap:4,background:'rgba(255,255,255,0.035)',borderRadius:14,padding:'8px 10px',border:'1px solid rgba(255,255,255,0.08)',minHeight:52}}>
-            <button onClick={()=>{const v=clamp(bpm-5,40,250);setBpm(v);bpmRef.current=v;}} style={{width:16,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.6)',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>−</button>
-            <button onClick={()=>{const v=clamp(bpm-1,40,250);setBpm(v);bpmRef.current=v;}} style={{width:14,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.45)',fontSize:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>‹</button>
-            <div style={{textAlign:'center',minWidth:40}}>
-              <div style={{fontSize:13,fontWeight:700,color:gc_,fontFamily:'Space Mono,monospace',lineHeight:1}}>{bpm}</div>
-              <div style={{fontSize:5.5,color:'rgba(255,255,255,0.3)',letterSpacing:'0.1em'}}>BPM</div>
-            </div>
-            <button onClick={()=>{const v=clamp(bpm+1,40,250);setBpm(v);bpmRef.current=v;}} style={{width:14,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.45)',fontSize:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>›</button>
-            <button onClick={()=>{const v=clamp(bpm+5,40,250);setBpm(v);bpmRef.current=v;}} style={{width:16,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.6)',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>+</button>
-            <button onClick={tapTempo} style={{padding:'1px 5px',borderRadius:2,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.45)',fontSize:6.5,cursor:'pointer',fontFamily:'Space Mono,monospace',marginLeft:2}}>TAP</button>
+        <div style={{flex:1}}/>
+
+        {/* Visualizer */}
+        {!isPhone&&<canvas ref={vizRef} width={96} height={18} style={{opacity:0.65,borderRadius:2}}/>}
+
+        {/* BPM — proper control with +/- and slider */}
+        <div style={{display:'flex',alignItems:'center',gap:2,background:'rgba(255,255,255,0.05)',borderRadius:4,padding:'2px 4px',border:'1px solid rgba(255,255,255,0.1)'}}>
+          <button onClick={()=>{const v=clamp(bpm-5,40,250);setBpm(v);bpmRef.current=v;}} style={{width:16,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.6)',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>−</button>
+          <button onClick={()=>{const v=clamp(bpm-1,40,250);setBpm(v);bpmRef.current=v;}} style={{width:14,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.45)',fontSize:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>‹</button>
+          <div style={{textAlign:'center',minWidth:32}}>
+            <div style={{fontSize:13,fontWeight:700,color:gc_,fontFamily:'Space Mono,monospace',lineHeight:1}}>{bpm}</div>
+            <div style={{fontSize:5.5,color:'rgba(255,255,255,0.3)',letterSpacing:'0.1em'}}>BPM</div>
           </div>
-
-          <button onClick={togglePlay} style={{
-            padding:'14px 18px',borderRadius:14,border:'1px solid rgba(255,255,255,0.08)',alignSelf:'stretch',
-            background:isPlaying?'#ff2244':'#00cc66',
-            color:'#000',fontSize:9,fontWeight:700,cursor:'pointer',
-            letterSpacing:'0.1em',fontFamily:'Space Mono,monospace',
-            boxShadow:isPlaying?'0 0 12px #ff224466':'0 0 12px #00cc6666',
-            transition:'all 0.1s',flexShrink:0,
-          }}>{isPlaying?'■ STOP':'▶ PLAY'}</button>
-
-          <button onClick={()=>setAutopilot(v=>!v)} style={{
-            padding:'12px 14px',borderRadius:14,border:`1px solid ${autopilot?gc_:'rgba(255,255,255,0.1)'}`,alignSelf:'stretch',
-            background:autopilot?`${gc_}22`:'rgba(255,255,255,0.04)',
-            color:autopilot?gc_:'rgba(255,255,255,0.38)',
-            fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',fontFamily:'Space Mono,monospace',
-            boxShadow:autopilot?`0 0 10px ${gc_}55`:'none',
-            transition:'all 0.12s',flexShrink:0,
-          }}>{autopilot?'◈ AUTO':'○ AUTO'}</button>
-
-          <div style={{display:'flex',flexDirection:'column',gap:8,minWidth:0}}>
-            <div style={{display:'flex',gap:6,flexShrink:0,padding:'6px',borderRadius:14,background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)'}}>
-              {['perform','studio','song'].map(v=>(
-                <button key={v} onClick={()=>setView(v)} style={{
-                  padding:'8px 12px',borderRadius:10,border:`1px solid ${view===v?gc_:'rgba(255,255,255,0.08)'}`,
-                  background:view===v?`${gc_}18`:'transparent',
-                  color:view===v?gc_:'rgba(255,255,255,0.3)',
-                  fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.08em',fontFamily:'Space Mono,monospace',
-                  textTransform:'uppercase',
-                }}>{v}</button>
-              ))}
-            </div>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,padding:'10px 12px',borderRadius:12,background:'rgba(0,0,0,0.18)',border:'1px solid rgba(255,255,255,0.05)'}}>
-              <div style={{minWidth:0}}>
-                <div style={topLabel}>Status</div>
-                <div style={{fontSize:7,color:'rgba(255,255,255,0.5)',maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',letterSpacing:'0.05em'}}>
-                  {recState==='recording'&&<span style={{color:'#ff2244',marginRight:3}}>●</span>}{status}
-                </div>
-              </div>
-              <div style={{display:'flex',alignItems:'center',gap:8}}>
-                <div style={{width:6,height:6,borderRadius:'50%',background:midiOk?'#00ff88':'rgba(255,255,255,0.12)',flexShrink:0,boxShadow:midiOk?'0 0 10px #00ff88':'none'}}/>
-                <div style={{fontSize:7,color:'rgba(255,255,255,0.28)',letterSpacing:'0.08em'}}>MIDI {midiOk?'ONLINE':'OFF'}</div>
-              </div>
-            </div>
-          </div>
+          <button onClick={()=>{const v=clamp(bpm+1,40,250);setBpm(v);bpmRef.current=v;}} style={{width:14,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.45)',fontSize:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>›</button>
+          <button onClick={()=>{const v=clamp(bpm+5,40,250);setBpm(v);bpmRef.current=v;}} style={{width:16,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.6)',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>+</button>
+          <button onClick={tapTempo} style={{padding:'1px 5px',borderRadius:2,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.45)',fontSize:6.5,cursor:'pointer',fontFamily:'Space Mono,monospace',marginLeft:2}}>TAP</button>
         </div>
+
+        <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap'}}>
+          <button onClick={()=>setPolySynth(v=>!v)} style={{padding:'4px 7px',borderRadius:3,border:`1px solid ${polySynth?gc_:'rgba(255,255,255,0.1)'}`,background:polySynth?`${gc_}18`:'rgba(255,255,255,0.03)',color:polySynth?gc_:'rgba(255,255,255,0.4)',fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>SYNTH POLY</button>
+          <button onClick={()=>setBassStack(v=>!v)} style={{padding:'4px 7px',borderRadius:3,border:`1px solid ${bassStack?'#22d3ee':'rgba(255,255,255,0.1)'}`,background:bassStack?'rgba(34,211,238,0.12)':'rgba(255,255,255,0.03)',color:bassStack?'#22d3ee':'rgba(255,255,255,0.4)',fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>BASS STACK</button>
+          <button onClick={clearPattern} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(255,80,80,0.35)',background:'rgba(255,80,80,0.08)',color:'#ff8a8a',fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>CLEAR</button>
+        </div>
+
+        {/* Transport */}
+        <button onClick={togglePlay} style={{
+          padding:'4px 14px',borderRadius:3,border:'none',
+          background:isPlaying?'#ff2244':'#00cc66',
+          color:'#000',fontSize:9,fontWeight:700,cursor:'pointer',
+          letterSpacing:'0.1em',fontFamily:'Space Mono,monospace',
+          boxShadow:isPlaying?'0 0 12px #ff224466':'0 0 12px #00cc6666',
+          transition:'all 0.1s',flexShrink:0,
+        }}>{isPlaying?'■ STOP':'▶ PLAY'}</button>
+
+        {/* Autopilot */}
+        <button onClick={()=>setAutopilot(v=>!v)} style={{
+          padding:'4px 8px',borderRadius:3,border:`1px solid ${autopilot?gc_:'rgba(255,255,255,0.1)'}`,
+          background:autopilot?`${gc_}22`:'rgba(255,255,255,0.04)',
+          color:autopilot?gc_:'rgba(255,255,255,0.38)',
+          fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',fontFamily:'Space Mono,monospace',
+          boxShadow:autopilot?`0 0 10px ${gc_}55`:'none',
+          transition:'all 0.12s',flexShrink:0,
+        }}>{autopilot?'◈ AUTO':'○ AUTO'}</button>
+
+        {/* View toggle */}
+        <div style={{display:'flex',gap:2,flexShrink:0}}>
+          {['perform','studio','song'].map(v=>(
+            <button key={v} onClick={()=>setView(v)} style={{
+              padding:'2px 6px',borderRadius:2,border:`1px solid ${view===v?gc_:'rgba(255,255,255,0.08)'}`,
+              background:view===v?`${gc_}18`:'transparent',
+              color:view===v?gc_:'rgba(255,255,255,0.3)',
+              fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.08em',fontFamily:'Space Mono,monospace',
+              textTransform:'uppercase',
+            }}>{v}</button>
+          ))}
+        </div>
+
+        {/* Status */}
+        <div style={{fontSize:7,color:'rgba(255,255,255,0.35)',maxWidth:isPhone?'100%':100,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',letterSpacing:'0.05em',flex:isPhone?'1 1 100%':'0 1 auto'}}>
+          {recState==='recording'&&<span style={{color:'#ff2244',marginRight:3}}>●</span>}{status}
+        </div>
+        <div style={{width:5,height:5,borderRadius:'50%',background:midiOk?'#00ff88':'rgba(255,255,255,0.12)',flexShrink:0}}/>
       </div>
 
       {/* ── CONTEXT BAR — always-visible musical state ── */}
-      <div style={{display:'flex',alignItems:'center',gap:8,padding:'3px 10px',background:'rgba(0,0,0,0.25)',borderBottom:'1px solid rgba(255,255,255,0.04)',flexShrink:0,height:20,overflow:'hidden'}}>
+      <div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:8,padding:isPhone?'6px 10px':'3px 10px',background:'rgba(0,0,0,0.25)',borderBottom:'1px solid rgba(255,255,255,0.04)',flexShrink:0,minHeight:isPhone?40:20,overflow:'hidden'}}>
         <span style={{fontSize:6.5,color:'rgba(255,255,255,0.25)',letterSpacing:'0.12em',textTransform:'uppercase'}}>NOW PLAYING:</span>
         <span style={{fontSize:7,fontWeight:700,color:gc_,letterSpacing:'0.1em',textTransform:'uppercase'}}>{genre}</span>
         <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
@@ -1400,11 +1412,13 @@ export default function App(){
         <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
         <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.06em'}}>arp:{arpMode}</span>
         <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
+        <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.06em'}}>poly:{polySynth?'3v':'mono'} / bass:{bassStack?'stack':'mono'}</span>
+        <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
         <span style={{fontSize:7,color:isPlaying?'#00ff88':'rgba(255,255,255,0.25)',letterSpacing:'0.06em'}}>{isPlaying?'▶ RUNNING':'■ STOPPED'}</span>
         {autopilot&&<><span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span><span style={{fontSize:7,color:gc_,letterSpacing:'0.06em'}}>◈ AUTOPILOT ON</span></>}
         {songActive&&<><span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span><span style={{fontSize:7,color:'#ffaa00',letterSpacing:'0.06em'}}>ARC {arcIdx+1}/{songArc.length}</span></>}
         <div style={{flex:1}}/>
-        <span style={{fontSize:6,color:'rgba(255,255,255,0.18)',letterSpacing:'0.08em'}}>SPACE=play · A=drop · S=break · D=build · F=groove · G=tension · M=mutate · R=regen · P=auto · T=tap</span>
+        {!isPhone&&<span style={{fontSize:6,color:'rgba(255,255,255,0.18)',letterSpacing:'0.08em'}}>SPACE=play · A=drop · S=break · D=build · F=groove · G=tension · M=mutate · R=regen · P=auto · T=tap</span>}
       </div>
 
       {/* ── VIEWS ── */}
@@ -1427,6 +1441,7 @@ export default function App(){
         swing={swing} setSwing={setSwing}
         toggleCell={toggleCell}
         songArc={songArc} arcIdx={arcIdx} songActive={songActive}
+        compact={isCompact} phone={isPhone}
       />}
 
       {view==='studio'&&<StudioView
@@ -1457,6 +1472,7 @@ export default function App(){
         exportJSON={exportJSON} importRef={importRef} importJSON={importJSON}
         savedScenes={savedScenes} saveScene={saveScene} loadScene={loadScene}
         projectName={projectName} setProjectName={setProjectName}
+        compact={isCompact} phone={isPhone}
       />}
 
       {view==='song'&&<SongView
@@ -1468,6 +1484,7 @@ export default function App(){
         triggerSection={triggerSection}
         modeName={modeName} arpeMode={arpMode}
         bpm={bpm}
+        compact={isCompact} phone={isPhone}
       />}
 
     </div>
@@ -1477,7 +1494,7 @@ export default function App(){
 // ─────────────────────────────────────────────────────────────────────────────
 // PERFORM VIEW — full-screen live performance interface
 // ─────────────────────────────────────────────────────────────────────────────
-function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bassLine,synthLine,laneLen,step,page,setPage,activeNotes,arpeMode,modeName,autopilot,autopilotIntensity,setAutopilotIntensity,perfActions,regenerateSection,savedScenes,saveScene,loadScene,master,setMaster,space,setSpace,tone,setTone,drive,setDrive,grooveAmt,setGrooveAmt,swing,setSwing,toggleCell,songArc,arcIdx,songActive,setNote}){
+function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bassLine,synthLine,laneLen,step,page,setPage,activeNotes,arpeMode,modeName,autopilot,autopilotIntensity,setAutopilotIntensity,perfActions,regenerateSection,savedScenes,saveScene,loadScene,master,setMaster,space,setSpace,tone,setTone,drive,setDrive,grooveAmt,setGrooveAmt,swing,setSwing,toggleCell,songArc,arcIdx,songActive,setNote,compact,phone}){
   const SECTION_COLORS={drop:'#ff2244',break:'#4488ff',build:'#ffaa00',groove:'#00cc66',tension:'#ff6622',fill:'#cc00ff',intro:'#44ffcc',outro:'#aaaaaa'};
   const sc=SECTION_COLORS[currentSectionName]||gc;
   const visibleStart=page*16,visibleEnd=Math.min(visibleStart+16,MAX_STEPS);
@@ -1486,10 +1503,10 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
   const shortcut={drop:'A',break:'S',build:'D',groove:'F',tension:'G',fill:'H'};
 
   return(
-    <div style={{flex:1,display:'flex',gap:6,padding:'5px 7px 8px 7px',minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',flexDirection:compact?'column':'row',gap:6,padding:phone?'8px':'5px 7px 8px 7px',minHeight:0,overflowY:'auto',overflowX:'hidden'}}>
 
       {/* LEFT — Section triggers + autopilot */}
-      <div style={{width:118,display:'flex',flexDirection:'column',gap:3,flexShrink:0}}>
+      <div style={{width:compact?'100%':118,display:'flex',flexDirection:'column',gap:3,flexShrink:0}}>
         {/* Section pads */}
         <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',marginBottom:1,textTransform:'uppercase'}}>SECTIONS</div>
         {SECTS.map(sec=>{
@@ -1525,6 +1542,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
           {label:'RND BASS',fn:perfActions.randomizeBass,tip:'random bass'},
           {label:'NOTES ↑',fn:perfActions.shiftNotesUp,tip:'shift up'},
           {label:'NOTES ↓',fn:perfActions.shiftNotesDown,tip:'shift down'},
+          {label:'CLEAR',fn:perfActions.clear,tip:'clear all lanes'},
         ].map(({label,fn,key,tip})=>(
           <button key={label} onClick={fn} title={tip} style={{
             padding:'4px 6px',borderRadius:3,border:'1px solid rgba(255,255,255,0.08)',
@@ -1539,10 +1557,10 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
       </div>
 
       {/* CENTER — Grid + VU */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',gap:4,minWidth:0}}>
+      <div style={{flex:1,display:'flex',flexDirection:'column',gap:4,minWidth:0,order:compact?1:2}}>
 
         {/* Section indicator + info bar */}
-        <div style={{display:'flex',alignItems:'center',gap:8,height:22,flexShrink:0}}>
+        <div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:8,minHeight:22,flexShrink:0}}>
           <div style={{fontSize:13,fontWeight:700,color:sc,letterSpacing:'0.16em',textTransform:'uppercase',textShadow:`0 0 16px ${sc}55`}}>
             {currentSectionName.toUpperCase()}
           </div>
@@ -1620,7 +1638,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
       </div>
 
       {/* RIGHT — Macro knobs + scenes */}
-      <div style={{width:186,display:'flex',flexDirection:'column',gap:8,flexShrink:0,padding:'16px',borderRadius:24,background:'linear-gradient(180deg, rgba(12,17,31,0.98), rgba(6,10,20,0.95))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.03)'}}>
+      <div style={{width:compact?'100%':118,display:'flex',flexDirection:'column',gap:4,flexShrink:0,order:compact?3:3}}>
         {/* Main macro faders */}
         <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',textTransform:'uppercase',marginBottom:1}}>MACROS</div>
         {[
@@ -1671,7 +1689,7 @@ const navBtn={padding:'1px 5px',borderRadius:2,border:'1px solid rgba(255,255,25
 // ─────────────────────────────────────────────────────────────────────────────
 // STUDIO VIEW — detailed editor
 // ─────────────────────────────────────────────────────────────────────────────
-function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setPage,toggleCell,setNote,modeName,laneVU,space,setSpace,tone,setTone,noiseMix,setNoiseMix,drive,setDrive,compress,setCompress,bassFilter,setBassFilter,synthFilter,setSynthFilter,drumDecay,setDrumDecay,bassSubAmt,setBassSubAmt,fmIdx,setFmIdx,master,setMaster,swing,setSwing,humanize,setHumanize,grooveAmt,setGrooveAmt,grooveProfile,setGrooveProfile,regenerateSection,currentSectionName,undoLen,undo,recState,startRec,stopRec,recordings,exportJSON,importRef,importJSON,savedScenes,saveScene,loadScene,projectName,setProjectName}){
+function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setPage,toggleCell,setNote,modeName,laneVU,space,setSpace,tone,setTone,noiseMix,setNoiseMix,drive,setDrive,compress,setCompress,bassFilter,setBassFilter,synthFilter,setSynthFilter,drumDecay,setDrumDecay,bassSubAmt,setBassSubAmt,fmIdx,setFmIdx,master,setMaster,swing,setSwing,humanize,setHumanize,grooveAmt,setGrooveAmt,grooveProfile,setGrooveProfile,regenerateSection,currentSectionName,undoLen,undo,recState,startRec,stopRec,recordings,exportJSON,importRef,importJSON,savedScenes,saveScene,loadScene,projectName,setProjectName,compact,phone}){
   const [tab,setTab]=useState('mixer');
   const [noteEditLane,setNoteEditLane]=useState('bass');
   const visibleStart=page*16,visibleEnd=Math.min(visibleStart+16,MAX_STEPS);
@@ -1680,11 +1698,10 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
   const notePool=noteEditLane==='bass'?mode.b:mode.s;
 
   return(
-    <div style={{flex:1,display:'flex',gap:14,padding:'0',minHeight:0,overflow:'hidden',filter:'drop-shadow(0 18px 34px rgba(0,0,0,0.28))'}}>
-
+    <div style={{flex:1,display:'flex',flexDirection:compact?'column':'row',gap:5,padding:phone?'8px':'5px 7px 8px 7px',minHeight:0,overflowY:'auto',overflowX:'hidden'}}>
 
       {/* LEFT — Grid editor */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',gap:10,minWidth:0,padding:'18px',borderRadius:24,background:'linear-gradient(180deg, rgba(9,14,27,0.98), rgba(4,8,18,0.95))',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'0 18px 40px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.03)'}}>
+      <div style={{flex:1,display:'flex',flexDirection:'column',gap:3,minWidth:0}}>
         {/* Grid header */}
         <div style={{display:'flex',alignItems:'center',gap:5,height:20,flexShrink:0}}>
           <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.1em'}}>{genre.toUpperCase()} · {modeName.toUpperCase()} · {currentSectionName.toUpperCase()}</span>
@@ -1752,9 +1769,9 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
       </div>
 
       {/* RIGHT — Controls */}
-      <div style={{width:178,display:'flex',flexDirection:'column',gap:0,flexShrink:0,borderLeft:'1px solid rgba(255,255,255,0.05)'}}>
+      <div style={{width:compact?'100%':178,display:'flex',flexDirection:'column',gap:0,flexShrink:0,borderLeft:compact?'none':'1px solid rgba(255,255,255,0.05)',borderTop:compact?'1px solid rgba(255,255,255,0.05)':'none'}}>
         {/* Tabs */}
-        <div style={{display:'flex',borderBottom:'1px solid rgba(255,255,255,0.05)',flexShrink:0}}>
+        <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:4,alignItems:'center'}}><button onClick={clearPattern} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(255,80,80,0.3)',background:'rgba(255,80,80,0.08)',color:'#ff8a8a',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>CLEAR</button><button onClick={()=>setPolySynth(v=>!v)} style={{padding:'4px 8px',borderRadius:3,border:`1px solid ${polySynth?gc:'rgba(255,255,255,0.08)'}`,background:polySynth?`${gc}18`:'rgba(255,255,255,0.03)',color:polySynth?gc:'rgba(255,255,255,0.35)',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>SYNTH POLY</button><button onClick={()=>setBassStack(v=>!v)} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(34,211,238,0.25)',background:bassStack?'rgba(34,211,238,0.12)':'rgba(255,255,255,0.03)',color:bassStack?'#22d3ee':'rgba(255,255,255,0.35)',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>BASS STACK</button></div><div style={{display:'flex',borderBottom:'1px solid rgba(255,255,255,0.05)',flexShrink:0}}>
           {['mixer','synth','session'].map(t=>(
             <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'5px 0',fontSize:6.5,fontWeight:700,letterSpacing:'0.1em',border:'none',background:'transparent',color:tab===t?gc:'rgba(255,255,255,0.22)',cursor:'pointer',borderBottom:tab===t?`2px solid ${gc}`:'2px solid transparent',textTransform:'uppercase',fontFamily:'Space Mono,monospace',transition:'color 0.1s'}}>{t}</button>
           ))}
@@ -1878,15 +1895,15 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
 // ─────────────────────────────────────────────────────────────────────────────
 // SONG VIEW — arc composer and arrangement
 // ─────────────────────────────────────────────────────────────────────────────
-function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,currentSectionName,SONG_ARCS,SECTIONS,triggerSection,modeName,arpeMode,bpm}){
+function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,currentSectionName,SONG_ARCS,SECTIONS,triggerSection,modeName,arpeMode,bpm,compact,phone}){
   const SECTION_COLORS={drop:'#ff2244',break:'#4488ff',build:'#ffaa00',groove:'#00cc66',tension:'#ff6622',fill:'#cc00ff',intro:'#44ffcc',outro:'#aaaaaa'};
   const gd=GENRES[genre];
 
   return(
-    <div style={{flex:1,display:'flex',gap:8,padding:'6px 12px 12px 12px',minHeight:0,overflow:'hidden'}}>
+    <div style={{flex:1,display:'flex',flexDirection:compact?'column':'row',gap:8,padding:phone?'8px':'6px 12px 12px 12px',minHeight:0,overflowY:'auto',overflowX:'hidden'}}>
 
       {/* LEFT — Genre info + arc control */}
-      <div style={{width:260,display:'flex',flexDirection:'column',gap:8,flexShrink:0}}>
+      <div style={{width:compact?'100%':260,display:'flex',flexDirection:'column',gap:8,flexShrink:0}}>
         {/* Genre card */}
         <div style={{padding:16,borderRadius:8,border:`1px solid ${gc}33`,background:`${gc}08`}}>
           <div style={{fontSize:18,fontWeight:700,color:gc,letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:4}}>{genre}</div>
@@ -1958,7 +1975,7 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
       {/* RIGHT — Section library + direct trigger */}
       <div style={{flex:1,display:'flex',flexDirection:'column',gap:6}}>
         <div style={{fontSize:7,color:'rgba(255,255,255,0.25)',letterSpacing:'0.2em',textTransform:'uppercase'}}>SECTION LIBRARY — CLICK TO TRIGGER</div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6}}>
+        <div style={{display:'grid',gridTemplateColumns:phone?'repeat(2,1fr)':'repeat(4,1fr)',gap:6}}>
           {Object.entries(SECTIONS).map(([name,data])=>{
             const sc=SECTION_COLORS[name]||'#ffffff';
             const isActive=currentSectionName===name;
@@ -1986,7 +2003,7 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
         {/* Current section info */}
         <div style={{padding:12,borderRadius:6,border:'1px solid rgba(255,255,255,0.06)',background:'rgba(255,255,255,0.02)',marginTop:4}}>
           <div style={{fontSize:7,color:'rgba(255,255,255,0.25)',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:6}}>CURRENT SESSION</div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:8}}>
+          <div style={{display:'grid',gridTemplateColumns:phone?'repeat(2,1fr)':'repeat(5,1fr)',gap:8}}>
             {[
               {l:'GENRE',v:genre},{l:'SECTION',v:currentSectionName},{l:'MODE',v:modeName},
               {l:'ARP',v:arpeMode},{l:'STATUS',v:songActive?`arc[${arcIdx+1}/${songArc.length}]`:'manual'},
