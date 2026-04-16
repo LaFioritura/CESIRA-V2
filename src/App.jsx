@@ -21,17 +21,17 @@ const GENRES={
   house:{bpm:[120,130],kick:'every4',swing:0.06,atmosphere:'warm Chicago',
     kickFreq:90,kickEnd:40,kickDecay:0.20,noiseColor:'pink',
     modes:['dorian','mixo'],density:0.65,chaos:0.28,
-    bassMode:'sub',synthMode:'pad',fxProfile:{drive:0.1,space:0.55,tone:0.8},
+    bassMode:'sub',synthMode:'organ',fxProfile:{drive:0.1,space:0.55,tone:0.8},
     hatPattern:'offbeat',description:'Warm soulful groove'},
   ambient:{bpm:[70,90],kick:'sparse',swing:0.0,atmosphere:'oceanic',
     kickFreq:60,kickEnd:25,kickDecay:0.35,noiseColor:'pink',
     modes:['lydian','dorian'],density:0.25,chaos:0.55,
-    bassMode:'drone',synthMode:'glass',fxProfile:{drive:0.0,space:0.9,tone:0.7},
+    bassMode:'drone',synthMode:'pad',fxProfile:{drive:0.0,space:0.9,tone:0.7},
     hatPattern:'sparse',description:'Textural spatial sound'},
   dnb:{bpm:[160,180],kick:'syncopated',swing:0.04,atmosphere:'jungle pressure',
     kickFreq:95,kickEnd:35,kickDecay:0.14,noiseColor:'white',
     modes:['minor','dorian'],density:0.78,chaos:0.55,
-    bassMode:'grit',synthMode:'bell',fxProfile:{drive:0.35,space:0.3,tone:0.5},
+    bassMode:'grit',synthMode:'glass',fxProfile:{drive:0.35,space:0.3,tone:0.5},
     hatPattern:'breakbeat',description:'Fast broken jungle'},
   acid:{bpm:[125,138],kick:'every4',swing:0.05,atmosphere:'303 acid',
     kickFreq:85,kickEnd:32,kickDecay:0.18,noiseColor:'white',
@@ -46,12 +46,12 @@ const GENRES={
   experimental:{bpm:[80,160],kick:'irregular',swing:0.08,atmosphere:'avant-garde',
     kickFreq:100,kickEnd:45,kickDecay:0.25,noiseColor:'pink',
     modes:['chroma','lydian'],density:0.45,chaos:0.88,
-    bassMode:'wet',synthMode:'choir',fxProfile:{drive:0.2,space:0.7,tone:0.6},
+    bassMode:'wet',synthMode:'strings',fxProfile:{drive:0.2,space:0.7,tone:0.6},
     hatPattern:'random',description:'Unpredictable textural'},
   cinematic:{bpm:[85,110],kick:'sparse',swing:0.03,atmosphere:'epic orchestral',
     kickFreq:75,kickEnd:30,kickDecay:0.32,noiseColor:'pink',
     modes:['minor','lydian'],density:0.38,chaos:0.35,
-    bassMode:'drone',synthMode:'choir',fxProfile:{drive:0.05,space:0.85,tone:0.85},
+    bassMode:'drone',synthMode:'strings',fxProfile:{drive:0.05,space:0.85,tone:0.85},
     hatPattern:'sparse',description:'Dramatic cinematic score'},
 };
 const GENRE_NAMES=Object.keys(GENRES);
@@ -715,43 +715,118 @@ export default function App(){
     if(midiRef.current){const out=[...midiRef.current.outputs.values()][0];if(out){const v=Math.round(clamp(accent,0,1)*127);out.send([0x93,NOTE_MIDI[note]||48,v]);setTimeout(()=>out.send([0x83,NOTE_MIDI[note]||48,0]),rel*1000);}}
   };
 
-  // ─── SYNTH SYNTHESIS ───────────────────────────────────────────────────────
+  // ─── SYNTH SYNTHESIS — extended with richer voices ───────────────────────
   const playSynth=(note,accent,t,lenSteps=1)=>{
     if(!nodeGuard())return;
     const a=audioRef.current;
     const f=NOTE_FREQ[note]||440;
     const dur=clamp(stepSec()*lenSteps*0.92,0.04,6);
     const mode=GENRES[genre].synthMode||'lead';
-    const atk=0.005+(mode==='pad'||mode==='glass'?0.04:0.005);
-    const rel=Math.max(atk+0.02,dur*0.9+(mode==='pad'?0.4:mode==='glass'?0.6:0.1));
-    const hold=Math.max(atk+0.01,dur*0.65);
-    const cleanMs=(rel+0.5)*1000;
+    const cleanMs=(dur+1.5)*1000;
 
-    const amp=a.ctx.createGain(),fil=a.ctx.createBiquadFilter();
-    fil.type='lowpass';fil.frequency.value=180+synthFilter*7000+tone*1400;fil.Q.value=0.5+compress*3;
-    amp.gain.setValueAtTime(0,t);amp.gain.linearRampToValueAtTime(0.38*accent,t+atk);amp.gain.setValueAtTime(0.38*accent,t+hold);amp.gain.exponentialRampToValueAtTime(0.0001,t+rel);
-
-    if(mode==='glass'||mode==='bell'||mode==='air'){
-      const car=a.ctx.createOscillator(),mod=a.ctx.createOscillator(),mg=a.ctx.createGain();
-      car.type='sine';car.frequency.value=f;mod.type='sine';mod.frequency.value=f*(mode==='bell'?3:2.5);mg.gain.value=f*(fmIdxRef.current*(mode==='bell'?2:1.5));
-      mod.connect(mg);mg.connect(car.frequency);car.connect(fil);fil.connect(amp);
+    // ── PLUCK — Karplus-Strong style: filtered noise burst decaying ──
+    if(mode==='glass'||mode==='bell'){
+      const atk=0.001,rel=Math.max(0.3,dur*1.2+synthFilter*2);
+      const nb=noiseBuffer(0.04,1,'white');
+      const src=a.ctx.createBufferSource();src.buffer=nb;
+      const dly=a.ctx.createDelay(0.05);dly.delayTime.value=1/f;
+      const fbk=a.ctx.createGain();fbk.gain.value=0.97-synthFilter*0.15;
+      const lpf=a.ctx.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=2000+synthFilter*6000;
+      const amp=a.ctx.createGain();
+      amp.gain.setValueAtTime(0,t);amp.gain.linearRampToValueAtTime(0.55*accent,t+atk);amp.gain.exponentialRampToValueAtTime(0.001,t+rel);
+      // Feedback loop for pluck resonance
+      src.connect(dly);dly.connect(lpf);lpf.connect(fbk);fbk.connect(dly);lpf.connect(amp);
       const dest=getLaneGain('synth')||a.bus;amp.connect(dest);trackNode(cleanMs);
-      gc(car,[mod,mg,fil,amp],cleanMs);
-      ss(car,t);ss(mod,t);st(car,t+rel+0.1);st(mod,t+rel+0.1);
-    } else {
-      const o1=a.ctx.createOscillator(),o2=a.ctx.createOscillator();
-      const tmap={lead:'square',pad:'sawtooth',mist:'sawtooth',choir:'sine',star:'sine',glass:'sine'};
-      o1.type=tmap[mode]||'sawtooth';o2.type=mode==='pad'||mode==='choir'?'sine':'triangle';
-      o1.frequency.value=f;o2.frequency.value=f*1.008;
-      const vib=a.ctx.createOscillator(),vg=a.ctx.createGain();
-      vib.frequency.value=5.5;vg.gain.value=clamp(mode==='lead'?8:3,0,15);
-      vib.connect(vg);vg.connect(o1.frequency);vg.connect(o2.frequency);
-      const mix=a.ctx.createGain();mix.gain.value=0.5;
-      o1.connect(mix);o2.connect(mix);mix.connect(fil);fil.connect(amp);
-      const dest=getLaneGain('synth')||a.bus;amp.connect(dest);trackNode(cleanMs);
-      gc(o1,[o2,vib,vg,mix,fil,amp],cleanMs);
-      ss(o1,t);ss(o2,t);ss(vib,t);st(o1,t+rel+0.1);st(o2,t+rel+0.1);st(vib,t+rel+0.1);
+      gc(src,[dly,lpf,fbk,amp],cleanMs);
+      ss(src,t);st(src,t+0.04);
+      setActiveNotes(p=>({...p,synth:note}));return;
     }
+
+    // ── PAD — 3 detuned oscillators + slow filter sweep ──
+    if(mode==='pad'||mode==='choir'||mode==='mist'){
+      const atk=0.06+dur*0.08,rel=Math.max(atk+0.1,dur*0.9+space*0.5);
+      const o1=a.ctx.createOscillator(),o2=a.ctx.createOscillator(),o3=a.ctx.createOscillator();
+      o1.type='sawtooth';o2.type='sawtooth';o3.type='sine';
+      o1.frequency.value=f;o2.frequency.value=f*1.012;o3.frequency.value=f*0.995;
+      const mix=a.ctx.createGain();mix.gain.value=0.33;
+      const fil=a.ctx.createBiquadFilter();fil.type='lowpass';
+      fil.frequency.setValueAtTime(300+synthFilter*2000,t);
+      fil.frequency.linearRampToValueAtTime(800+synthFilter*5000,t+atk*2);
+      fil.Q.value=0.4+compress*1.5;
+      const amp=a.ctx.createGain();
+      amp.gain.setValueAtTime(0,t);amp.gain.linearRampToValueAtTime(0.38*accent,t+atk);
+      amp.gain.setValueAtTime(0.38*accent,t+Math.max(atk+0.01,dur*0.6));
+      amp.gain.exponentialRampToValueAtTime(0.001,t+rel);
+      o1.connect(mix);o2.connect(mix);o3.connect(mix);mix.connect(fil);fil.connect(amp);
+      const dest=getLaneGain('synth')||a.bus;amp.connect(dest);trackNode(cleanMs);
+      gc(o1,[o2,o3,mix,fil,amp],cleanMs);
+      ss(o1,t);ss(o2,t);ss(o3,t);st(o1,t+rel+0.1);st(o2,t+rel+0.1);st(o3,t+rel+0.1);
+      setActiveNotes(p=>({...p,synth:note}));return;
+    }
+
+    // ── ORGAN — true FM with 4 operators ──
+    if(mode==='organ'||mode==='air'){
+      const atk=0.005,rel=Math.max(0.05,dur*0.95);
+      const c1=a.ctx.createOscillator(),c2=a.ctx.createOscillator();
+      const m1=a.ctx.createOscillator(),m2=a.ctx.createOscillator();
+      const mg1=a.ctx.createGain(),mg2=a.ctx.createGain();
+      c1.type='sine';c2.type='sine';m1.type='sine';m2.type='sine';
+      c1.frequency.value=f;c2.frequency.value=f*2;m1.frequency.value=f*1;m2.frequency.value=f*3;
+      mg1.gain.value=f*fmIdxRef.current*0.8;mg2.gain.value=f*fmIdxRef.current*0.4;
+      m1.connect(mg1);mg1.connect(c1.frequency);
+      m2.connect(mg2);mg2.connect(c2.frequency);
+      const mix=a.ctx.createGain();mix.gain.value=0.5;
+      const amp=a.ctx.createGain();
+      amp.gain.setValueAtTime(0,t);amp.gain.linearRampToValueAtTime(0.4*accent,t+atk);
+      amp.gain.setValueAtTime(0.4*accent,t+Math.max(atk+0.01,dur*0.85));
+      amp.gain.exponentialRampToValueAtTime(0.001,t+rel);
+      c1.connect(mix);c2.connect(mix);mix.connect(amp);
+      const dest=getLaneGain('synth')||a.bus;amp.connect(dest);trackNode(cleanMs);
+      gc(c1,[c2,m1,m2,mg1,mg2,mix,amp],cleanMs);
+      ss(c1,t);ss(c2,t);ss(m1,t);ss(m2,t);st(c1,t+rel+0.1);st(c2,t+rel+0.1);st(m1,t+rel+0.1);st(m2,t+rel+0.1);
+      setActiveNotes(p=>({...p,synth:note}));return;
+    }
+
+    // ── STRINGS — saw + vibrato + slow attack ──
+    if(mode==='strings'||mode==='star'){
+      const atk=0.08+dur*0.06,rel=Math.max(atk+0.1,dur*0.92+space*0.4);
+      const o1=a.ctx.createOscillator(),o2=a.ctx.createOscillator();
+      const vib=a.ctx.createOscillator(),vg=a.ctx.createGain();
+      o1.type='sawtooth';o2.type='sawtooth';
+      o1.frequency.value=f;o2.frequency.value=f*1.006;
+      vib.frequency.value=5.2+rnd()*0.6;vg.gain.value=2+synthFilter*6;
+      vib.connect(vg);vg.connect(o1.frequency);vg.connect(o2.frequency);
+      const fil=a.ctx.createBiquadFilter();fil.type='lowpass';fil.frequency.value=400+synthFilter*5000;fil.Q.value=0.3;
+      const amp=a.ctx.createGain();
+      amp.gain.setValueAtTime(0,t);amp.gain.linearRampToValueAtTime(0.36*accent,t+atk);
+      amp.gain.setValueAtTime(0.36*accent,t+Math.max(atk+0.01,dur*0.7));
+      amp.gain.exponentialRampToValueAtTime(0.001,t+rel);
+      o1.connect(fil);o2.connect(fil);fil.connect(amp);
+      const dest=getLaneGain('synth')||a.bus;amp.connect(dest);trackNode(cleanMs);
+      gc(o1,[o2,vib,vg,fil,amp],cleanMs);
+      ss(o1,t);ss(o2,t);ss(vib,t);st(o1,t+rel+0.1);st(o2,t+rel+0.1);st(vib,t+rel+0.1);
+      setActiveNotes(p=>({...p,synth:note}));return;
+    }
+
+    // ── DEFAULT LEAD — square/saw with vibrato ──
+    const atk=0.005,rel=Math.max(0.05,dur*0.9);
+    const o1=a.ctx.createOscillator(),o2=a.ctx.createOscillator();
+    const tmap={lead:'square',mist:'sawtooth',choir:'sine',star:'sine',glass:'sine',organ:'sine'};
+    o1.type=tmap[mode]||'sawtooth';o2.type='triangle';
+    o1.frequency.value=f;o2.frequency.value=f*1.008;
+    const vib=a.ctx.createOscillator(),vg=a.ctx.createGain();
+    vib.frequency.value=5.5;vg.gain.value=clamp(mode==='lead'?8:3,0,15);
+    vib.connect(vg);vg.connect(o1.frequency);
+    const fil=a.ctx.createBiquadFilter();fil.type='lowpass';fil.frequency.value=200+synthFilter*7000+tone*1200;fil.Q.value=0.5+compress*3;
+    const amp=a.ctx.createGain();
+    amp.gain.setValueAtTime(0,t);amp.gain.linearRampToValueAtTime(0.38*accent,t+atk);
+    amp.gain.setValueAtTime(0.38*accent,t+Math.max(atk+0.01,dur*0.65));
+    amp.gain.exponentialRampToValueAtTime(0.001,t+rel);
+    const mix=a.ctx.createGain();mix.gain.value=0.5;
+    o1.connect(mix);o2.connect(mix);mix.connect(fil);fil.connect(amp);
+    const dest=getLaneGain('synth')||a.bus;amp.connect(dest);trackNode(cleanMs);
+    gc(o1,[o2,vib,vg,mix,fil,amp],cleanMs);
+    ss(o1,t);ss(o2,t);ss(vib,t);st(o1,t+rel+0.1);st(o2,t+rel+0.1);st(vib,t+rel+0.1);
     setActiveNotes(p=>({...p,synth:note}));
     if(midiRef.current){const out=[...midiRef.current.outputs.values()][0];if(out){const v=Math.round(clamp(accent,0,1)*127);out.send([0x94,NOTE_MIDI[note]||60,v]);setTimeout(()=>out.send([0x84,NOTE_MIDI[note]||60,0]),rel*1000);}}
   };
@@ -935,6 +1010,39 @@ export default function App(){
       });
       setPatterns(np);patternsRef.current=np;
       setStatus('Thickened');
+    },
+    randomizeNotes:()=>{
+      // Randomize synth line within current mode's scale
+      const mode=MODES[modeName]||MODES.minor;
+      const sp=mode.s;
+      pushUndo();
+      setSynthLine(prev=>{const n=prev.map((v,i)=>patterns.synth[i]?.on?pick(sp):v);synthRef.current=n;return n;});
+      setStatus('Synth notes randomized');
+    },
+    randomizeBass:()=>{
+      const mode=MODES[modeName]||MODES.minor;
+      const bp=mode.b;
+      pushUndo();
+      setBassLine(prev=>{const n=prev.map((v,i)=>patterns.bass[i]?.on?pick(bp):v);bassRef.current=n;return n;});
+      setStatus('Bass notes randomized');
+    },
+    shiftNotesUp:()=>{
+      const mode=MODES[modeName]||MODES.minor;
+      ['bass','synth'].forEach(lane=>{
+        const pool=lane==='bass'?mode.b:mode.s;
+        if(lane==='bass')setBassLine(prev=>{const n=prev.map((v,i)=>{if(!patterns[lane][i]?.on)return v;const idx=pool.indexOf(v);return pool[Math.min(idx+1,pool.length-1)];});bassRef.current=n;return n;});
+        else setSynthLine(prev=>{const n=prev.map((v,i)=>{if(!patterns[lane][i]?.on)return v;const idx=pool.indexOf(v);return pool[Math.min(idx+1,pool.length-1)];});synthRef.current=n;return n;});
+      });
+      setStatus('Notes shifted up');
+    },
+    shiftNotesDown:()=>{
+      const mode=MODES[modeName]||MODES.minor;
+      ['bass','synth'].forEach(lane=>{
+        const pool=lane==='bass'?mode.b:mode.s;
+        if(lane==='bass')setBassLine(prev=>{const n=prev.map((v,i)=>{if(!patterns[lane][i]?.on)return v;const idx=pool.indexOf(v);return pool[Math.max(idx-1,0)];});bassRef.current=n;return n;});
+        else setSynthLine(prev=>{const n=prev.map((v,i)=>{if(!patterns[lane][i]?.on)return v;const idx=pool.indexOf(v);return pool[Math.max(idx-1,0)];});synthRef.current=n;return n;});
+      });
+      setStatus('Notes shifted down');
     },
     shiftArp:()=>{
       const modes=['up','down','updown','outside'];
@@ -1181,12 +1289,17 @@ export default function App(){
         {/* Visualizer */}
         <canvas ref={vizRef} width={96} height={18} style={{opacity:0.65,borderRadius:2}}/>
 
-        {/* BPM */}
-        <div style={{display:'flex',alignItems:'center',gap:3}}>
-          <span style={{fontSize:7,color:'rgba(255,255,255,0.28)',letterSpacing:'0.12em'}}>BPM</span>
-          <input type="number" value={bpm} min={40} max={250} onChange={e=>{const v=clamp(Number(e.target.value),40,250);setBpm(v);bpmRef.current=v;}}
-            style={{width:38,background:'rgba(255,255,255,0.06)',border:`1px solid rgba(255,255,255,0.1)`,borderRadius:3,padding:'1px 4px',color:gc_,fontSize:11,fontWeight:700,fontFamily:'Space Mono,monospace',textAlign:'center',outline:'none'}}/>
-          <button onClick={tapTempo} style={{padding:'2px 5px',borderRadius:2,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.45)',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>TAP</button>
+        {/* BPM — proper control with +/- and slider */}
+        <div style={{display:'flex',alignItems:'center',gap:2,background:'rgba(255,255,255,0.05)',borderRadius:4,padding:'2px 4px',border:'1px solid rgba(255,255,255,0.1)'}}>
+          <button onClick={()=>{const v=clamp(bpm-5,40,250);setBpm(v);bpmRef.current=v;}} style={{width:16,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.6)',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>−</button>
+          <button onClick={()=>{const v=clamp(bpm-1,40,250);setBpm(v);bpmRef.current=v;}} style={{width:14,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.45)',fontSize:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>‹</button>
+          <div style={{textAlign:'center',minWidth:32}}>
+            <div style={{fontSize:13,fontWeight:700,color:gc_,fontFamily:'Space Mono,monospace',lineHeight:1}}>{bpm}</div>
+            <div style={{fontSize:5.5,color:'rgba(255,255,255,0.3)',letterSpacing:'0.1em'}}>BPM</div>
+          </div>
+          <button onClick={()=>{const v=clamp(bpm+1,40,250);setBpm(v);bpmRef.current=v;}} style={{width:14,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.45)',fontSize:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>›</button>
+          <button onClick={()=>{const v=clamp(bpm+5,40,250);setBpm(v);bpmRef.current=v;}} style={{width:16,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.6)',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>+</button>
+          <button onClick={tapTempo} style={{padding:'1px 5px',borderRadius:2,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.45)',fontSize:6.5,cursor:'pointer',fontFamily:'Space Mono,monospace',marginLeft:2}}>TAP</button>
         </div>
 
         {/* Transport */}
@@ -1223,10 +1336,28 @@ export default function App(){
         </div>
 
         {/* Status */}
-        <div style={{fontSize:8,color:'rgba(255,255,255,0.35)',maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',letterSpacing:'0.06em'}}>
-          {recState==='recording'&&<span style={{color:'#ff2244',marginRight:4}}>●</span>}{status}
+        <div style={{fontSize:7,color:'rgba(255,255,255,0.35)',maxWidth:100,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',letterSpacing:'0.05em'}}>
+          {recState==='recording'&&<span style={{color:'#ff2244',marginRight:3}}>●</span>}{status}
         </div>
-        <div style={{width:6,height:6,borderRadius:'50%',background:midiOk?'#00ff88':'rgba(255,255,255,0.15)',flexShrink:0}}/>
+        <div style={{width:5,height:5,borderRadius:'50%',background:midiOk?'#00ff88':'rgba(255,255,255,0.12)',flexShrink:0}}/>
+      </div>
+
+      {/* ── CONTEXT BAR — always-visible musical state ── */}
+      <div style={{display:'flex',alignItems:'center',gap:8,padding:'3px 10px',background:'rgba(0,0,0,0.25)',borderBottom:'1px solid rgba(255,255,255,0.04)',flexShrink:0,height:20,overflow:'hidden'}}>
+        <span style={{fontSize:6.5,color:'rgba(255,255,255,0.25)',letterSpacing:'0.12em',textTransform:'uppercase'}}>NOW PLAYING:</span>
+        <span style={{fontSize:7,fontWeight:700,color:gc_,letterSpacing:'0.1em',textTransform:'uppercase'}}>{genre}</span>
+        <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
+        <span style={{fontSize:7,color:'rgba(255,255,255,0.45)',letterSpacing:'0.06em'}}>{currentSectionName}</span>
+        <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
+        <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.06em'}}>{modeName}</span>
+        <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
+        <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.06em'}}>arp:{arpMode}</span>
+        <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
+        <span style={{fontSize:7,color:isPlaying?'#00ff88':'rgba(255,255,255,0.25)',letterSpacing:'0.06em'}}>{isPlaying?'▶ RUNNING':'■ STOPPED'}</span>
+        {autopilot&&<><span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span><span style={{fontSize:7,color:gc_,letterSpacing:'0.06em'}}>◈ AUTOPILOT ON</span></>}
+        {songActive&&<><span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span><span style={{fontSize:7,color:'#ffaa00',letterSpacing:'0.06em'}}>ARC {arcIdx+1}/{songArc.length}</span></>}
+        <div style={{flex:1}}/>
+        <span style={{fontSize:6,color:'rgba(255,255,255,0.18)',letterSpacing:'0.08em'}}>SPACE=play · A=drop · S=break · D=build · F=groove · G=tension · M=mutate · R=regen · P=auto · T=tap</span>
       </div>
 
       {/* ── VIEWS ── */}
@@ -1239,6 +1370,7 @@ export default function App(){
         autopilot={autopilot} autopilotIntensity={autopilotIntensity}
         setAutopilotIntensity={setAutopilotIntensity}
         perfActions={perfActions} regenerateSection={regenerateSection}
+        setNote={setNote} patterns={patterns}
         savedScenes={savedScenes} saveScene={saveScene} loadScene={loadScene}
         master={master} setMaster={setMaster}
         space={space} setSpace={setSpace}
@@ -1298,7 +1430,7 @@ export default function App(){
 // ─────────────────────────────────────────────────────────────────────────────
 // PERFORM VIEW — full-screen live performance interface
 // ─────────────────────────────────────────────────────────────────────────────
-function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bassLine,synthLine,laneLen,step,page,setPage,activeNotes,arpeMode,modeName,autopilot,autopilotIntensity,setAutopilotIntensity,perfActions,regenerateSection,savedScenes,saveScene,loadScene,master,setMaster,space,setSpace,tone,setTone,drive,setDrive,grooveAmt,setGrooveAmt,swing,setSwing,toggleCell,songArc,arcIdx,songActive}){
+function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bassLine,synthLine,laneLen,step,page,setPage,activeNotes,arpeMode,modeName,autopilot,autopilotIntensity,setAutopilotIntensity,perfActions,regenerateSection,savedScenes,saveScene,loadScene,master,setMaster,space,setSpace,tone,setTone,drive,setDrive,grooveAmt,setGrooveAmt,swing,setSwing,toggleCell,songArc,arcIdx,songActive,setNote}){
   const SECTION_COLORS={drop:'#ff2244',break:'#4488ff',build:'#ffaa00',groove:'#00cc66',tension:'#ff6622',fill:'#cc00ff',intro:'#44ffcc',outro:'#aaaaaa'};
   const sc=SECTION_COLORS[currentSectionName]||gc;
   const visibleStart=page*16,visibleEnd=Math.min(visibleStart+16,MAX_STEPS);
@@ -1336,15 +1468,19 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
         {/* Actions */}
         <div style={{fontSize:6,color:'rgba(255,255,255,0.18)',letterSpacing:'0.18em',marginTop:3,textTransform:'uppercase'}}>ACTIONS</div>
         {[
-          {label:'MUTATE',fn:perfActions.mutate,key:'M'},
-          {label:'THIN',fn:perfActions.thinOut},
-          {label:'THICKEN',fn:perfActions.thicken},
-          {label:'REHARM',fn:perfActions.reharmonize},
-          {label:'ARP→',fn:perfActions.shiftArp},
-          {label:'REGEN',fn:()=>regenerateSection(currentSectionName),key:'R'},
-        ].map(({label,fn,key})=>(
-          <button key={label} onClick={fn} style={{
-            padding:'5px 6px',borderRadius:3,border:'1px solid rgba(255,255,255,0.08)',
+          {label:'MUTATE',fn:perfActions.mutate,key:'M',tip:'flip drum hits'},
+          {label:'THIN',fn:perfActions.thinOut,tip:'sparse out'},
+          {label:'THICKEN',fn:perfActions.thicken,tip:'add hits'},
+          {label:'REHARM',fn:perfActions.reharmonize,tip:'new chords'},
+          {label:'ARP→',fn:perfActions.shiftArp,tip:'change pattern'},
+          {label:'REGEN',fn:()=>regenerateSection(currentSectionName),key:'R',tip:'full rebuild'},
+          {label:'RND SYNTH',fn:perfActions.randomizeNotes,tip:'random notes'},
+          {label:'RND BASS',fn:perfActions.randomizeBass,tip:'random bass'},
+          {label:'NOTES ↑',fn:perfActions.shiftNotesUp,tip:'shift up'},
+          {label:'NOTES ↓',fn:perfActions.shiftNotesDown,tip:'shift down'},
+        ].map(({label,fn,key,tip})=>(
+          <button key={label} onClick={fn} title={tip} style={{
+            padding:'4px 6px',borderRadius:3,border:'1px solid rgba(255,255,255,0.08)',
             background:'rgba(255,255,255,0.02)',color:'rgba(255,255,255,0.48)',
             fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace',
             letterSpacing:'0.06em',display:'flex',justifyContent:'space-between',alignItems:'center',
