@@ -420,6 +420,48 @@ const GENRE_CLR={
   acid:'#aaff00',industrial:'#aaaaaa',experimental:'#ff44ff',cinematic:'#4488ff'
 };
 
+
+const SOUND_PRESETS={
+  bass:{
+    sub_floor:{label:'SUB FLOOR',bassMode:'sub',bassFilter:0.38,bassSubAmt:0.92,drive:0.06,compress:0.24,tone:0.48},
+    acid_pressure:{label:'ACID PRESSURE',bassMode:'bit',bassFilter:0.72,bassSubAmt:0.36,drive:0.42,compress:0.32,tone:0.42,fmIdx:0.86},
+    fm_metal:{label:'FM METAL',bassMode:'fm',bassFilter:0.62,bassSubAmt:0.28,drive:0.26,compress:0.38,tone:0.44,fmIdx:1.08},
+    drift_drone:{label:'DRIFT DRONE',bassMode:'drone',bassFilter:0.56,bassSubAmt:0.62,drive:0.1,compress:0.18,tone:0.66},
+    fold_grit:{label:'FOLD GRIT',bassMode:'fold',bassFilter:0.68,bassSubAmt:0.34,drive:0.48,compress:0.4,tone:0.36},
+    wet_orbit:{label:'WET ORBIT',bassMode:'wet',bassFilter:0.48,bassSubAmt:0.5,drive:0.22,compress:0.24,tone:0.7},
+    pulse_body:{label:'PULSE BODY',bassMode:'pulse',bassFilter:0.58,bassSubAmt:0.44,drive:0.18,compress:0.28,tone:0.56},
+    saw_motion:{label:'SAW MOTION',bassMode:'saw',bassFilter:0.64,bassSubAmt:0.3,drive:0.3,compress:0.34,tone:0.52},
+  },
+  synth:{
+    velvet_pad:{label:'VELVET PAD',synthMode:'pad',synthFilter:0.64,space:0.72,tone:0.68,drive:0.08,polySynth:true},
+    neon_lead:{label:'NEON LEAD',synthMode:'lead',synthFilter:0.72,space:0.28,tone:0.74,drive:0.22,polySynth:false},
+    glass_bell:{label:'GLASS BELL',synthMode:'glass',synthFilter:0.78,space:0.54,tone:0.82,drive:0.06,polySynth:true},
+    air_organ:{label:'AIR ORGAN',synthMode:'organ',synthFilter:0.52,space:0.34,tone:0.62,drive:0.12,polySynth:true,fmIdx:0.72},
+    string_machine:{label:'STRING MACHINE',synthMode:'strings',synthFilter:0.68,space:0.66,tone:0.7,drive:0.08,polySynth:true},
+    choir_mist:{label:'CHOIR MIST',synthMode:'choir',synthFilter:0.58,space:0.76,tone:0.66,drive:0.04,polySynth:true},
+    star_noise:{label:'STAR NOISE',synthMode:'star',synthFilter:0.8,space:0.62,tone:0.86,drive:0.14,polySynth:true},
+    cinematic_air:{label:'CINEMATIC AIR',synthMode:'air',synthFilter:0.6,space:0.84,tone:0.74,drive:0.02,polySynth:true,fmIdx:0.54},
+    mist_pluck:{label:'MIST PLUCK',synthMode:'mist',synthFilter:0.44,space:0.46,tone:0.58,drive:0.12,polySynth:false},
+    bell_shard:{label:'BELL SHARD',synthMode:'bell',synthFilter:0.82,space:0.48,tone:0.8,drive:0.04,polySynth:true},
+  },
+  drum:{
+    tight_punch:{label:'TIGHT PUNCH',drumDecay:0.32,noiseMix:0.12,compress:0.18,drive:0.1},
+    warehouse:{label:'WAREHOUSE',drumDecay:0.48,noiseMix:0.22,compress:0.28,drive:0.18},
+    broken_air:{label:'BROKEN AIR',drumDecay:0.58,noiseMix:0.34,compress:0.24,drive:0.12,swing:0.06},
+    industrial_haze:{label:'INDUSTRIAL HAZE',drumDecay:0.64,noiseMix:0.42,compress:0.34,drive:0.28},
+    dusty_tape:{label:'DUSTY TAPE',drumDecay:0.44,noiseMix:0.28,compress:0.22,drive:0.16,tone:0.58},
+    crisp_club:{label:'CRISP CLUB',drumDecay:0.26,noiseMix:0.1,compress:0.26,drive:0.08,tone:0.68},
+  },
+  performance:{
+    club_night:{label:'CLUB NIGHT',genre:'techno',grooveAmt:0.7,swing:0.03,space:0.26,tone:0.56,drive:0.18,compress:0.28},
+    acid_run:{label:'ACID RUN',genre:'acid',grooveAmt:0.76,swing:0.06,space:0.24,tone:0.42,drive:0.38,compress:0.3},
+    jungle_grid:{label:'JUNGLE GRID',genre:'dnb',grooveAmt:0.74,swing:0.05,space:0.22,tone:0.52,drive:0.2,compress:0.24},
+    ambient_bloom:{label:'AMBIENT BLOOM',genre:'ambient',grooveAmt:0.42,swing:0.0,space:0.88,tone:0.72,drive:0.02,compress:0.16},
+    cinematic_rise:{label:'CINEMATIC RISE',genre:'cinematic',grooveAmt:0.5,swing:0.02,space:0.82,tone:0.76,drive:0.04,compress:0.18},
+    industrial_drive:{label:'INDUSTRIAL DRIVE',genre:'industrial',grooveAmt:0.78,swing:0.0,space:0.18,tone:0.34,drive:0.48,compress:0.36},
+  }
+};
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App(){
   // ── Audio
@@ -492,6 +534,10 @@ export default function App(){
   useEffect(()=>{fmIdxRef.current=fmIdx;},[fmIdx]);
   const [polySynth,setPolySynth]=useState(true);
   const [bassStack,setBassStack]=useState(true);
+  const [bassPreset,setBassPreset]=useState('sub_floor');
+  const [synthPreset,setSynthPreset]=useState('velvet_pad');
+  const [drumPreset,setDrumPreset]=useState('tight_punch');
+  const [performancePreset,setPerformancePreset]=useState('club_night');
 
   // ── Autopilot
   const [autopilot,setAutopilot]=useState(false);
@@ -1154,7 +1200,7 @@ export default function App(){
   const serialize=()=>({
     v:2,genre,modeName,bpm,currentSectionName,grooveProfile,arpMode:arpModeRef.current,
     space,tone,noiseMix,drive,compress,bassFilter,synthFilter,drumDecay,bassSubAmt,fmIdx,
-    master,swing,humanize,grooveAmt,projectName,polySynth,bassStack,
+    master,swing,humanize,grooveAmt,projectName,polySynth,bassStack,bassPreset,synthPreset,drumPreset,performancePreset,
     patterns,bassLine,synthLine,laneLen,
   });
   const applySnap=(snap)=>{
@@ -1166,7 +1212,7 @@ export default function App(){
     setSpace(snap.space??0.3);setTone(snap.tone??0.7);setNoiseMix(snap.noiseMix??0.2);setDrive(snap.drive??0.1);
     setCompress(snap.compress??0.3);setBassFilter(snap.bassFilter??0.55);setSynthFilter(snap.synthFilter??0.65);
     setDrumDecay(snap.drumDecay??0.5);setBassSubAmt(snap.bassSubAmt??0.5);setFmIdx(snap.fmIdx??0.6);
-    setMaster(snap.master??0.85);setSwing(snap.swing??0.03);setHumanize(snap.humanize??0.012);setGrooveAmt(snap.grooveAmt??0.65);setPolySynth(snap.polySynth??true);setBassStack(snap.bassStack??true);
+    setMaster(snap.master??0.85);setSwing(snap.swing??0.03);setHumanize(snap.humanize??0.012);setGrooveAmt(snap.grooveAmt??0.65);setPolySynth(snap.polySynth??true);setBassStack(snap.bassStack??true);setBassPreset(snap.bassPreset??'sub_floor');setSynthPreset(snap.synthPreset??'velvet_pad');setDrumPreset(snap.drumPreset??'tight_punch');setPerformancePreset(snap.performancePreset??'club_night');
     if(snap.projectName)setProjectName(snap.projectName);
     if(snap.patterns){setPatterns(snap.patterns);patternsRef.current=snap.patterns;}
     if(snap.bassLine){setBassLine(snap.bassLine);bassRef.current=snap.bassLine;}
@@ -1209,6 +1255,63 @@ export default function App(){
       return next.slice(-6);
     });
   };
+
+  const applyPartialPreset=(preset)=>{
+    if(!preset)return;
+    if(preset.genre&&preset.genre!==genre)newGenreSession(preset.genre);
+    if(preset.bassMode){
+      const next={...GENRES[genre],bassMode:preset.bassMode};
+      GENRES[genre]=next;
+    }
+    if(preset.synthMode){
+      const next={...GENRES[genre],synthMode:preset.synthMode};
+      GENRES[genre]=next;
+    }
+    if(preset.space!==undefined)setSpace(preset.space);
+    if(preset.tone!==undefined)setTone(preset.tone);
+    if(preset.drive!==undefined)setDrive(preset.drive);
+    if(preset.compress!==undefined)setCompress(preset.compress);
+    if(preset.noiseMix!==undefined)setNoiseMix(preset.noiseMix);
+    if(preset.drumDecay!==undefined)setDrumDecay(preset.drumDecay);
+    if(preset.bassFilter!==undefined)setBassFilter(preset.bassFilter);
+    if(preset.synthFilter!==undefined)setSynthFilter(preset.synthFilter);
+    if(preset.bassSubAmt!==undefined)setBassSubAmt(preset.bassSubAmt);
+    if(preset.fmIdx!==undefined){setFmIdx(preset.fmIdx);fmIdxRef.current=preset.fmIdx;}
+    if(preset.polySynth!==undefined)setPolySynth(preset.polySynth);
+    if(preset.bassStack!==undefined)setBassStack(preset.bassStack);
+    if(preset.grooveAmt!==undefined){setGrooveAmt(preset.grooveAmt);grooveRef.current=preset.grooveAmt;}
+    if(preset.swing!==undefined){setSwing(preset.swing);swingRef.current=preset.swing;}
+  };
+
+  const applyBassPreset=(key)=>{
+    const preset=SOUND_PRESETS.bass[key];
+    if(!preset)return;
+    setBassPreset(key);
+    applyPartialPreset({...preset});
+    setStatus(`Bass preset — ${preset.label}`);
+  };
+  const applySynthPreset=(key)=>{
+    const preset=SOUND_PRESETS.synth[key];
+    if(!preset)return;
+    setSynthPreset(key);
+    applyPartialPreset({...preset});
+    setStatus(`Synth preset — ${preset.label}`);
+  };
+  const applyDrumPreset=(key)=>{
+    const preset=SOUND_PRESETS.drum[key];
+    if(!preset)return;
+    setDrumPreset(key);
+    applyPartialPreset({...preset});
+    setStatus(`Drum preset — ${preset.label}`);
+  };
+  const applyPerformancePreset=(key)=>{
+    const preset=SOUND_PRESETS.performance[key];
+    if(!preset)return;
+    setPerformancePreset(key);
+    applyPartialPreset({...preset});
+    setStatus(`Performance preset — ${preset.label}`);
+  };
+
   const clearPattern=()=>{
     pushUndo();
     const mode=MODES[modeName]||MODES.minor;
@@ -1286,6 +1389,7 @@ export default function App(){
   // ─── INIT ─────────────────────────────────────────────────────────────────
   useEffect(()=>{
     newGenreSession('techno');
+    setTimeout(()=>{applyBassPreset('sub_floor');applySynthPreset('velvet_pad');applyDrumPreset('tight_punch');applyPerformancePreset('club_night');},0);
   },[]);
 
   // ─── RENDER HELPERS ───────────────────────────────────────────────────────
@@ -1359,6 +1463,13 @@ export default function App(){
           <button onClick={()=>setPolySynth(v=>!v)} style={{padding:'4px 7px',borderRadius:3,border:`1px solid ${polySynth?gc_:'rgba(255,255,255,0.1)'}`,background:polySynth?`${gc_}18`:'rgba(255,255,255,0.03)',color:polySynth?gc_:'rgba(255,255,255,0.4)',fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>SYNTH POLY</button>
           <button onClick={()=>setBassStack(v=>!v)} style={{padding:'4px 7px',borderRadius:3,border:`1px solid ${bassStack?'#22d3ee':'rgba(255,255,255,0.1)'}`,background:bassStack?'rgba(34,211,238,0.12)':'rgba(255,255,255,0.03)',color:bassStack?'#22d3ee':'rgba(255,255,255,0.4)',fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>BASS STACK</button>
           <button onClick={clearPattern} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(255,80,80,0.35)',background:'rgba(255,80,80,0.08)',color:'#ff8a8a',fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>CLEAR</button>
+        </div>
+
+        <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap',minWidth:isPhone?'100%':'auto'}}>
+          <PresetSelect label='BASS' value={bassPreset} options={SOUND_PRESETS.bass} onChange={applyBassPreset} accent='#22d3ee' />
+          <PresetSelect label='SYNTH' value={synthPreset} options={SOUND_PRESETS.synth} onChange={applySynthPreset} accent={gc_} />
+          <PresetSelect label='DRUM' value={drumPreset} options={SOUND_PRESETS.drum} onChange={applyDrumPreset} accent='#ffb347' />
+          <PresetSelect label='PERF' value={performancePreset} options={SOUND_PRESETS.performance} onChange={applyPerformancePreset} accent='#7ee787' />
         </div>
 
         {/* Transport */}
@@ -1441,6 +1552,8 @@ export default function App(){
         swing={swing} setSwing={setSwing}
         toggleCell={toggleCell}
         songArc={songArc} arcIdx={arcIdx} songActive={songActive}
+        bassPreset={bassPreset} synthPreset={synthPreset} drumPreset={drumPreset} performancePreset={performancePreset}
+        applyBassPreset={applyBassPreset} applySynthPreset={applySynthPreset} applyDrumPreset={applyDrumPreset} applyPerformancePreset={applyPerformancePreset}
         compact={isCompact} phone={isPhone}
       />}
 
@@ -1472,6 +1585,9 @@ export default function App(){
         exportJSON={exportJSON} importRef={importRef} importJSON={importJSON}
         savedScenes={savedScenes} saveScene={saveScene} loadScene={loadScene}
         projectName={projectName} setProjectName={setProjectName}
+        clearPattern={clearPattern} polySynth={polySynth} setPolySynth={setPolySynth} bassStack={bassStack} setBassStack={setBassStack}
+        bassPreset={bassPreset} synthPreset={synthPreset} drumPreset={drumPreset} performancePreset={performancePreset}
+        applyBassPreset={applyBassPreset} applySynthPreset={applySynthPreset} applyDrumPreset={applyDrumPreset} applyPerformancePreset={applyPerformancePreset}
         compact={isCompact} phone={isPhone}
       />}
 
@@ -1494,7 +1610,7 @@ export default function App(){
 // ─────────────────────────────────────────────────────────────────────────────
 // PERFORM VIEW — full-screen live performance interface
 // ─────────────────────────────────────────────────────────────────────────────
-function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bassLine,synthLine,laneLen,step,page,setPage,activeNotes,arpeMode,modeName,autopilot,autopilotIntensity,setAutopilotIntensity,perfActions,regenerateSection,savedScenes,saveScene,loadScene,master,setMaster,space,setSpace,tone,setTone,drive,setDrive,grooveAmt,setGrooveAmt,swing,setSwing,toggleCell,songArc,arcIdx,songActive,setNote,compact,phone}){
+function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bassLine,synthLine,laneLen,step,page,setPage,activeNotes,arpeMode,modeName,autopilot,autopilotIntensity,setAutopilotIntensity,perfActions,regenerateSection,savedScenes,saveScene,loadScene,master,setMaster,space,setSpace,tone,setTone,drive,setDrive,grooveAmt,setGrooveAmt,swing,setSwing,toggleCell,songArc,arcIdx,songActive,setNote,bassPreset,synthPreset,drumPreset,performancePreset,applyBassPreset,applySynthPreset,applyDrumPreset,applyPerformancePreset,compact,phone}){
   const SECTION_COLORS={drop:'#ff2244',break:'#4488ff',build:'#ffaa00',groove:'#00cc66',tension:'#ff6622',fill:'#cc00ff',intro:'#44ffcc',outro:'#aaaaaa'};
   const sc=SECTION_COLORS[currentSectionName]||gc;
   const visibleStart=page*16,visibleEnd=Math.min(visibleStart+16,MAX_STEPS);
@@ -1686,10 +1802,21 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
 
 const navBtn={padding:'1px 5px',borderRadius:2,border:'1px solid rgba(255,255,255,0.09)',background:'rgba(255,255,255,0.03)',color:'rgba(255,255,255,0.45)',fontSize:9,cursor:'pointer',fontFamily:'Space Mono,monospace'};
 
+function PresetSelect({label,value,options,onChange,accent='#ffffff',compact=false}){
+  return(
+    <label style={{display:'flex',flexDirection:'column',gap:2,minWidth:compact?112:124}}>
+      <span style={{fontSize:6,color:'rgba(255,255,255,0.28)',letterSpacing:'0.12em',textTransform:'uppercase'}}>{label}</span>
+      <select value={value} onChange={e=>onChange(e.target.value)} style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${accent}33`,color:accent,borderRadius:4,padding:compact?'4px 6px':'5px 7px',fontSize:7,fontFamily:'Space Mono,monospace',outline:'none'}}>
+        {Object.entries(options).map(([key,preset])=><option key={key} value={key} style={{color:'#111',background:'#f2f2f2'}}>{preset.label}</option>)}
+      </select>
+    </label>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // STUDIO VIEW — detailed editor
 // ─────────────────────────────────────────────────────────────────────────────
-function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setPage,toggleCell,setNote,modeName,laneVU,space,setSpace,tone,setTone,noiseMix,setNoiseMix,drive,setDrive,compress,setCompress,bassFilter,setBassFilter,synthFilter,setSynthFilter,drumDecay,setDrumDecay,bassSubAmt,setBassSubAmt,fmIdx,setFmIdx,master,setMaster,swing,setSwing,humanize,setHumanize,grooveAmt,setGrooveAmt,grooveProfile,setGrooveProfile,regenerateSection,currentSectionName,undoLen,undo,recState,startRec,stopRec,recordings,exportJSON,importRef,importJSON,savedScenes,saveScene,loadScene,projectName,setProjectName,compact,phone}){
+function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setPage,toggleCell,setNote,modeName,laneVU,space,setSpace,tone,setTone,noiseMix,setNoiseMix,drive,setDrive,compress,setCompress,bassFilter,setBassFilter,synthFilter,setSynthFilter,drumDecay,setDrumDecay,bassSubAmt,setBassSubAmt,fmIdx,setFmIdx,master,setMaster,swing,setSwing,humanize,setHumanize,grooveAmt,setGrooveAmt,grooveProfile,setGrooveProfile,regenerateSection,currentSectionName,undoLen,undo,recState,startRec,stopRec,recordings,exportJSON,importRef,importJSON,savedScenes,saveScene,loadScene,projectName,setProjectName,clearPattern,polySynth,setPolySynth,bassStack,setBassStack,bassPreset,synthPreset,drumPreset,performancePreset,applyBassPreset,applySynthPreset,applyDrumPreset,applyPerformancePreset,compact,phone}){
   const [tab,setTab]=useState('mixer');
   const [noteEditLane,setNoteEditLane]=useState('bass');
   const visibleStart=page*16,visibleEnd=Math.min(visibleStart+16,MAX_STEPS);
@@ -1771,7 +1898,12 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
       {/* RIGHT — Controls */}
       <div style={{width:compact?'100%':178,display:'flex',flexDirection:'column',gap:0,flexShrink:0,borderLeft:compact?'none':'1px solid rgba(255,255,255,0.05)',borderTop:compact?'1px solid rgba(255,255,255,0.05)':'none'}}>
         {/* Tabs */}
-        <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:4,alignItems:'center'}}><button onClick={clearPattern} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(255,80,80,0.3)',background:'rgba(255,80,80,0.08)',color:'#ff8a8a',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>CLEAR</button><button onClick={()=>setPolySynth(v=>!v)} style={{padding:'4px 8px',borderRadius:3,border:`1px solid ${polySynth?gc:'rgba(255,255,255,0.08)'}`,background:polySynth?`${gc}18`:'rgba(255,255,255,0.03)',color:polySynth?gc:'rgba(255,255,255,0.35)',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>SYNTH POLY</button><button onClick={()=>setBassStack(v=>!v)} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(34,211,238,0.25)',background:bassStack?'rgba(34,211,238,0.12)':'rgba(255,255,255,0.03)',color:bassStack?'#22d3ee':'rgba(255,255,255,0.35)',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>BASS STACK</button></div><div style={{display:'flex',borderBottom:'1px solid rgba(255,255,255,0.05)',flexShrink:0}}>
+        <div style={{display:'flex',flexWrap:'wrap',gap:4,marginBottom:4,alignItems:'flex-end'}}>
+          <PresetSelect label='BASS' value={bassPreset} options={SOUND_PRESETS.bass} onChange={applyBassPreset} accent='#22d3ee' compact />
+          <PresetSelect label='SYNTH' value={synthPreset} options={SOUND_PRESETS.synth} onChange={applySynthPreset} accent={gc} compact />
+          <PresetSelect label='DRUM' value={drumPreset} options={SOUND_PRESETS.drum} onChange={applyDrumPreset} accent='#ffb347' compact />
+          <PresetSelect label='PERF' value={performancePreset} options={SOUND_PRESETS.performance} onChange={applyPerformancePreset} accent='#7ee787' compact />
+          <button onClick={clearPattern} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(255,80,80,0.3)',background:'rgba(255,80,80,0.08)',color:'#ff8a8a',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>CLEAR</button><button onClick={()=>setPolySynth(v=>!v)} style={{padding:'4px 8px',borderRadius:3,border:`1px solid ${polySynth?gc:'rgba(255,255,255,0.08)'}`,background:polySynth?`${gc}18`:'rgba(255,255,255,0.03)',color:polySynth?gc:'rgba(255,255,255,0.35)',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>SYNTH POLY</button><button onClick={()=>setBassStack(v=>!v)} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(34,211,238,0.25)',background:bassStack?'rgba(34,211,238,0.12)':'rgba(255,255,255,0.03)',color:bassStack?'#22d3ee':'rgba(255,255,255,0.35)',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>BASS STACK</button></div><div style={{display:'flex',borderBottom:'1px solid rgba(255,255,255,0.05)',flexShrink:0}}>
           {['mixer','synth','session'].map(t=>(
             <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'5px 0',fontSize:6.5,fontWeight:700,letterSpacing:'0.1em',border:'none',background:'transparent',color:tab===t?gc:'rgba(255,255,255,0.22)',cursor:'pointer',borderBottom:tab===t?`2px solid ${gc}`:'2px solid transparent',textTransform:'uppercase',fontFamily:'Space Mono,monospace',transition:'color 0.1s'}}>{t}</button>
           ))}
