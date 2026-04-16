@@ -1130,7 +1130,7 @@ export default function App(){
       regenerateSection(currentSectionName);
       setStatus(`Arp → ${next}`);
     },
-    clear:clearPattern,
+    clear:()=>clearPattern(),
   };
 
   // ─── AUTOPILOT ────────────────────────────────────────────────────────────
