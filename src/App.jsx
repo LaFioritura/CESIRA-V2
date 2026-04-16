@@ -1246,18 +1246,34 @@ export default function App(){
   // ─── RENDER HELPERS ───────────────────────────────────────────────────────
   const gc_=GENRE_CLR[genre]||'#ff4444';
   const visibleSteps=Array.from({length:PAGE},(_,i)=>page*PAGE+i);
+  const BASE_W=1600, BASE_H=940;
+  const [viewport,setViewport]=useState({w:typeof window!=='undefined'?window.innerWidth:1600,h:typeof window!=='undefined'?window.innerHeight:940});
+
+  useEffect(()=>{
+    const onResize=()=>setViewport({w:window.innerWidth,h:window.innerHeight});
+    window.addEventListener('resize',onResize);
+    onResize();
+    return()=>window.removeEventListener('resize',onResize);
+  },[]);
+
+  const fitScale=Math.min((viewport.w-16)/BASE_W,(viewport.h-16)/BASE_H,1);
 
   // ─── UI ───────────────────────────────────────────────────────────────────
   return(
     <div style={{
-      width:'100vw',height:'100dvh',background:'radial-gradient(circle at top left, rgba(0,196,255,0.12), transparent 24%), radial-gradient(circle at top right, rgba(204,136,255,0.1), transparent 20%), linear-gradient(180deg, #050816 0%, #070b14 48%, #03050b 100%)',color:'#eef4ff',
+      width:'100vw',height:'100dvh',background:'radial-gradient(circle at top left, rgba(0,196,255,0.12), transparent 24%), radial-gradient(circle at top right, rgba(204,136,255,0.1), transparent 20%), linear-gradient(180deg, #050816 0%, #070b14 48%, #03050b 100%)',
+      display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',padding:8,boxSizing:'border-box',
+    }}>
+      <div style={{width:BASE_W*fitScale,height:BASE_H*fitScale,position:'relative',overflow:'hidden',borderRadius:22,boxShadow:'0 22px 60px rgba(0,0,0,0.45)'}}>
+    <div style={{
+      width:BASE_W,height:BASE_H,background:'radial-gradient(circle at top left, rgba(0,196,255,0.12), transparent 24%), radial-gradient(circle at top right, rgba(204,136,255,0.1), transparent 20%), linear-gradient(180deg, #050816 0%, #070b14 48%, #03050b 100%)',color:'#eef4ff',
       fontFamily:"'Space Mono',monospace",display:'flex',flexDirection:'column',
       overflow:'hidden',userSelect:'none',position:'relative',
-      boxSizing:'border-box',padding:'14px',gap:10,
+      boxSizing:'border-box',padding:'14px',gap:10,transform:`scale(${fitScale})`,transformOrigin:'top left',
     }}>
 
       {/* ── SCANLINE OVERLAY ── */}
-      <div style={{position:'fixed',inset:0,backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.015) 2px,rgba(255,255,255,0.015) 4px)',pointerEvents:'none',zIndex:999,opacity:0.35}}/>
+      <div style={{position:'absolute',inset:0,backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.015) 2px,rgba(255,255,255,0.015) 4px)',pointerEvents:'none',zIndex:999,opacity:0.35}}/>
 
       {/* ── TOP BAR ── */}
       <div style={{display:'flex',alignItems:'center',gap:10,padding:'12px 16px',border:'1px solid rgba(255,255,255,0.08)',borderRadius:18,flexShrink:0,minHeight:72,background:'linear-gradient(180deg, rgba(10,16,34,0.92), rgba(7,12,25,0.88))',boxShadow:'0 20px 50px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03)',backdropFilter:'blur(14px)'}}>
@@ -1425,6 +1441,8 @@ CESIRA // WORKSTATION
       />}
       </div>
 
+    </div>
+      </div>
     </div>
   );
 }
