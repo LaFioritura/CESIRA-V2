@@ -9,6 +9,4 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
 
-
 body{color:#fff;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
-input,button,select,textarea{font:inherit;color:#fff;}
