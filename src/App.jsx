@@ -1425,7 +1425,7 @@ export default function App(){
 
         {/* Project name */}
         <input value={projectName} onChange={e=>setProjectName(e.target.value)}
-          style={{background:'transparent',border:'none',outline:'none',color:'rgba(255,255,255,0.4)',fontSize:8,fontFamily:'Space Mono,monospace',letterSpacing:'0.08em',width:isPhone?'100%':110,flex:isPhone?1:'0 0 auto',minWidth:isPhone?160:110}}/>
+          style={{background:'transparent',border:'none',outline:'none',color:'rgba(255,255,255,0.98)',fontSize:8,fontFamily:'Space Mono,monospace',letterSpacing:'0.08em',width:isPhone?'100%':110,flex:isPhone?1:'0 0 auto',minWidth:isPhone?160:110}}/>
 
         {/* Genre selector */}
         <div style={{display:'flex',gap:2,flexShrink:0,flexWrap:'wrap',maxWidth:isPhone?'100%':'none'}}>
@@ -1434,7 +1434,7 @@ export default function App(){
               padding:'2px 5px',borderRadius:2,border:`1px solid ${genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.07)'}`,
               background:genre===g?`${GENRE_CLR[g]}18`:'transparent',
               color:genre===g?GENRE_CLR[g]:'rgba(255,255,255,0.28)',
-              fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',
+              fontSize:8,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',
               fontFamily:'Space Mono,monospace',textTransform:'uppercase',
               transition:'all 0.1s',
             }}>{g}</button>
@@ -1448,21 +1448,21 @@ export default function App(){
 
         {/* BPM — proper control with +/- and slider */}
         <div style={{display:'flex',alignItems:'center',gap:2,background:'rgba(255,255,255,0.05)',borderRadius:4,padding:'2px 4px',border:'1px solid rgba(255,255,255,0.1)'}}>
-          <button onClick={()=>{const v=clamp(bpm-5,40,250);setBpm(v);bpmRef.current=v;}} style={{width:16,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.6)',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>−</button>
-          <button onClick={()=>{const v=clamp(bpm-1,40,250);setBpm(v);bpmRef.current=v;}} style={{width:14,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.45)',fontSize:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>‹</button>
+          <button onClick={()=>{const v=clamp(bpm-5,40,250);setBpm(v);bpmRef.current=v;}} style={{width:16,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,1)',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>−</button>
+          <button onClick={()=>{const v=clamp(bpm-1,40,250);setBpm(v);bpmRef.current=v;}} style={{width:14,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.98)',fontSize:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>‹</button>
           <div style={{textAlign:'center',minWidth:32}}>
             <div style={{fontSize:13,fontWeight:700,color:gc_,fontFamily:'Space Mono,monospace',lineHeight:1}}>{bpm}</div>
-            <div style={{fontSize:5.5,color:'rgba(255,255,255,0.3)',letterSpacing:'0.1em'}}>BPM</div>
+            <div style={{fontSize:7.5,color:'rgba(255,255,255,0.96)',letterSpacing:'0.1em'}}>BPM</div>
           </div>
-          <button onClick={()=>{const v=clamp(bpm+1,40,250);setBpm(v);bpmRef.current=v;}} style={{width:14,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.45)',fontSize:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>›</button>
-          <button onClick={()=>{const v=clamp(bpm+5,40,250);setBpm(v);bpmRef.current=v;}} style={{width:16,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.6)',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>+</button>
-          <button onClick={tapTempo} style={{padding:'1px 5px',borderRadius:2,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.45)',fontSize:6.5,cursor:'pointer',fontFamily:'Space Mono,monospace',marginLeft:2}}>TAP</button>
+          <button onClick={()=>{const v=clamp(bpm+1,40,250);setBpm(v);bpmRef.current=v;}} style={{width:14,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.98)',fontSize:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>›</button>
+          <button onClick={()=>{const v=clamp(bpm+5,40,250);setBpm(v);bpmRef.current=v;}} style={{width:16,height:16,borderRadius:2,border:'none',background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,1)',fontSize:10,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Space Mono,monospace',lineHeight:1,flexShrink:0}}>+</button>
+          <button onClick={tapTempo} style={{padding:'1px 5px',borderRadius:2,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.98)',fontSize:7.5,cursor:'pointer',fontFamily:'Space Mono,monospace',marginLeft:2}}>TAP</button>
         </div>
 
         <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap'}}>
-          <button onClick={()=>setPolySynth(v=>!v)} style={{padding:'4px 7px',borderRadius:3,border:`1px solid ${polySynth?gc_:'rgba(255,255,255,0.1)'}`,background:polySynth?`${gc_}18`:'rgba(255,255,255,0.03)',color:polySynth?gc_:'rgba(255,255,255,0.4)',fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>SYNTH POLY</button>
-          <button onClick={()=>setBassStack(v=>!v)} style={{padding:'4px 7px',borderRadius:3,border:`1px solid ${bassStack?'#22d3ee':'rgba(255,255,255,0.1)'}`,background:bassStack?'rgba(34,211,238,0.12)':'rgba(255,255,255,0.03)',color:bassStack?'#22d3ee':'rgba(255,255,255,0.4)',fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>BASS STACK</button>
-          <button onClick={clearPattern} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(255,80,80,0.35)',background:'rgba(255,80,80,0.08)',color:'#ff8a8a',fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>CLEAR</button>
+          <button onClick={()=>setPolySynth(v=>!v)} style={{padding:'4px 7px',borderRadius:3,border:`1px solid ${polySynth?gc_:'rgba(255,255,255,0.1)'}`,background:polySynth?`${gc_}18`:'rgba(255,255,255,0.03)',color:polySynth?gc_:'rgba(255,255,255,0.4)',fontSize:8,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>SYNTH POLY</button>
+          <button onClick={()=>setBassStack(v=>!v)} style={{padding:'4px 7px',borderRadius:3,border:`1px solid ${bassStack?'#22d3ee':'rgba(255,255,255,0.1)'}`,background:bassStack?'rgba(34,211,238,0.12)':'rgba(255,255,255,0.03)',color:bassStack?'#22d3ee':'rgba(255,255,255,0.4)',fontSize:8,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>BASS STACK</button>
+          <button onClick={clearPattern} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(255,80,80,0.35)',background:'rgba(255,80,80,0.08)',color:'#ff8a8a',fontSize:8,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>CLEAR</button>
         </div>
 
         <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap',minWidth:isPhone?'100%':'auto'}}>
@@ -1487,7 +1487,7 @@ export default function App(){
           padding:'4px 8px',borderRadius:3,border:`1px solid ${autopilot?gc_:'rgba(255,255,255,0.1)'}`,
           background:autopilot?`${gc_}22`:'rgba(255,255,255,0.04)',
           color:autopilot?gc_:'rgba(255,255,255,0.38)',
-          fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',fontFamily:'Space Mono,monospace',
+          fontSize:8,fontWeight:700,cursor:'pointer',letterSpacing:'0.1em',fontFamily:'Space Mono,monospace',
           boxShadow:autopilot?`0 0 10px ${gc_}55`:'none',
           transition:'all 0.12s',flexShrink:0,
         }}>{autopilot?'◈ AUTO':'○ AUTO'}</button>
@@ -1499,14 +1499,14 @@ export default function App(){
               padding:'2px 6px',borderRadius:2,border:`1px solid ${view===v?gc_:'rgba(255,255,255,0.08)'}`,
               background:view===v?`${gc_}18`:'transparent',
               color:view===v?gc_:'rgba(255,255,255,0.3)',
-              fontSize:7,fontWeight:700,cursor:'pointer',letterSpacing:'0.08em',fontFamily:'Space Mono,monospace',
+              fontSize:8,fontWeight:700,cursor:'pointer',letterSpacing:'0.08em',fontFamily:'Space Mono,monospace',
               textTransform:'uppercase',
             }}>{v}</button>
           ))}
         </div>
 
         {/* Status */}
-        <div style={{fontSize:7,color:'rgba(255,255,255,0.35)',maxWidth:isPhone?'100%':100,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',letterSpacing:'0.05em',flex:isPhone?'1 1 100%':'0 1 auto'}}>
+        <div style={{fontSize:8,color:'rgba(255,255,255,0.97)',maxWidth:isPhone?'100%':100,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',letterSpacing:'0.05em',flex:isPhone?'1 1 100%':'0 1 auto'}}>
           {recState==='recording'&&<span style={{color:'#ff2244',marginRight:3}}>●</span>}{status}
         </div>
         <div style={{width:5,height:5,borderRadius:'50%',background:midiOk?'#00ff88':'rgba(255,255,255,0.12)',flexShrink:0}}/>
@@ -1514,22 +1514,22 @@ export default function App(){
 
       {/* ── CONTEXT BAR — always-visible musical state ── */}
       <div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:8,padding:isPhone?'6px 10px':'3px 10px',background:'rgba(0,0,0,0.25)',borderBottom:'1px solid rgba(255,255,255,0.04)',flexShrink:0,minHeight:isPhone?40:20,overflow:'hidden'}}>
-        <span style={{fontSize:6.5,color:'rgba(255,255,255,0.25)',letterSpacing:'0.12em',textTransform:'uppercase'}}>NOW PLAYING:</span>
-        <span style={{fontSize:7,fontWeight:700,color:gc_,letterSpacing:'0.1em',textTransform:'uppercase'}}>{genre}</span>
+        <span style={{fontSize:7.5,color:'rgba(255,255,255,0.95)',letterSpacing:'0.12em',textTransform:'uppercase'}}>NOW PLAYING:</span>
+        <span style={{fontSize:8,fontWeight:700,color:gc_,letterSpacing:'0.1em',textTransform:'uppercase'}}>{genre}</span>
         <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
-        <span style={{fontSize:7,color:'rgba(255,255,255,0.45)',letterSpacing:'0.06em'}}>{currentSectionName}</span>
+        <span style={{fontSize:8,color:'rgba(255,255,255,0.98)',letterSpacing:'0.06em'}}>{currentSectionName}</span>
         <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
-        <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.06em'}}>{modeName}</span>
+        <span style={{fontSize:8,color:'rgba(255,255,255,0.97)',letterSpacing:'0.06em'}}>{modeName}</span>
         <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
-        <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.06em'}}>arp:{arpMode}</span>
+        <span style={{fontSize:8,color:'rgba(255,255,255,0.97)',letterSpacing:'0.06em'}}>arp:{arpMode}</span>
         <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
-        <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.06em'}}>poly:{polySynth?'3v':'mono'} / bass:{bassStack?'stack':'mono'}</span>
+        <span style={{fontSize:8,color:'rgba(255,255,255,0.97)',letterSpacing:'0.06em'}}>poly:{polySynth?'3v':'mono'} / bass:{bassStack?'stack':'mono'}</span>
         <span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span>
-        <span style={{fontSize:7,color:isPlaying?'#00ff88':'rgba(255,255,255,0.25)',letterSpacing:'0.06em'}}>{isPlaying?'▶ RUNNING':'■ STOPPED'}</span>
-        {autopilot&&<><span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span><span style={{fontSize:7,color:gc_,letterSpacing:'0.06em'}}>◈ AUTOPILOT ON</span></>}
-        {songActive&&<><span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span><span style={{fontSize:7,color:'#ffaa00',letterSpacing:'0.06em'}}>ARC {arcIdx+1}/{songArc.length}</span></>}
+        <span style={{fontSize:8,color:isPlaying?'#00ff88':'rgba(255,255,255,0.25)',letterSpacing:'0.06em'}}>{isPlaying?'▶ RUNNING':'■ STOPPED'}</span>
+        {autopilot&&<><span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span><span style={{fontSize:8,color:gc_,letterSpacing:'0.06em'}}>◈ AUTOPILOT ON</span></>}
+        {songActive&&<><span style={{color:'rgba(255,255,255,0.15)',fontSize:6}}>·</span><span style={{fontSize:8,color:'#ffaa00',letterSpacing:'0.06em'}}>ARC {arcIdx+1}/{songArc.length}</span></>}
         <div style={{flex:1}}/>
-        {!isPhone&&<span style={{fontSize:6,color:'rgba(255,255,255,0.18)',letterSpacing:'0.08em'}}>SPACE=play · A=drop · S=break · D=build · F=groove · G=tension · M=mutate · R=regen · P=auto · T=tap</span>}
+        {!isPhone&&<span style={{fontSize:8,color:'rgba(255,255,255,0.92)',letterSpacing:'0.08em'}}>SPACE=play · A=drop · S=break · D=build · F=groove · G=tension · M=mutate · R=regen · P=auto · T=tap</span>}
       </div>
 
       {/* ── VIEWS ── */}
@@ -1624,7 +1624,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
       {/* LEFT — Section triggers + autopilot */}
       <div style={{width:compact?'100%':118,display:'flex',flexDirection:'column',gap:3,flexShrink:0}}>
         {/* Section pads */}
-        <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',marginBottom:1,textTransform:'uppercase'}}>SECTIONS</div>
+        <div style={{fontSize:8,color:'rgba(255,255,255,0.94)',letterSpacing:'0.18em',marginBottom:1,textTransform:'uppercase'}}>SECTIONS</div>
         {SECTS.map(sec=>{
           const scl=SECTION_COLORS[sec]||'#ffffff';
           const isActive=currentSectionName===sec;
@@ -1640,13 +1640,13 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
               display:'flex',justifyContent:'space-between',alignItems:'center',
             }}>
               <span>{sec}</span>
-              {shortcut[sec]&&<span style={{fontSize:6,opacity:0.4}}>[{shortcut[sec]}]</span>}
+              {shortcut[sec]&&<span style={{fontSize:8,opacity:0.4}}>[{shortcut[sec]}]</span>}
             </button>
           );
         })}
 
         {/* Actions */}
-        <div style={{fontSize:6,color:'rgba(255,255,255,0.18)',letterSpacing:'0.18em',marginTop:3,textTransform:'uppercase'}}>ACTIONS</div>
+        <div style={{fontSize:8,color:'rgba(255,255,255,0.92)',letterSpacing:'0.18em',marginTop:3,textTransform:'uppercase'}}>ACTIONS</div>
         {[
           {label:'MUTATE',fn:perfActions.mutate,key:'M',tip:'flip drum hits'},
           {label:'THIN',fn:perfActions.thinOut,tip:'sparse out'},
@@ -1662,12 +1662,12 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
         ].map(({label,fn,key,tip})=>(
           <button key={label} onClick={fn} title={tip} style={{
             padding:'4px 6px',borderRadius:3,border:'1px solid rgba(255,255,255,0.08)',
-            background:'rgba(255,255,255,0.02)',color:'rgba(255,255,255,0.48)',
-            fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace',
+            background:'rgba(255,255,255,0.02)',color:'rgba(255,255,255,0.98)',
+            fontSize:8,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace',
             letterSpacing:'0.06em',display:'flex',justifyContent:'space-between',alignItems:'center',
           }}>
             <span>{label}</span>
-            {key&&<span style={{fontSize:6,opacity:0.35}}>[{key}]</span>}
+            {key&&<span style={{fontSize:8,opacity:0.35}}>[{key}]</span>}
           </button>
         ))}
       </div>
@@ -1681,7 +1681,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
             {currentSectionName.toUpperCase()}
           </div>
           <div style={{width:1,height:12,background:'rgba(255,255,255,0.08)'}}/>
-          <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.08em'}}>{genre} · {modeName} · arp:{arpeMode}</span>
+          <span style={{fontSize:8,color:'rgba(255,255,255,0.97)',letterSpacing:'0.08em'}}>{genre} · {modeName} · arp:{arpeMode}</span>
           <div style={{flex:1}}/>
           {songArc.length>0&&(
             <div style={{display:'flex',gap:2,alignItems:'center'}}>
@@ -1691,7 +1691,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
             </div>
           )}
           <button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0} style={{...navBtn,opacity:page===0?0.3:1,padding:'1px 5px',fontSize:9}}>‹</button>
-          <span style={{fontSize:7,color:'rgba(255,255,255,0.28)',fontFamily:'Space Mono,monospace'}}>{page+1}/4</span>
+          <span style={{fontSize:8,color:'rgba(255,255,255,0.95)',fontFamily:'Space Mono,monospace'}}>{page+1}/4</span>
           <button onClick={()=>setPage(p=>Math.min(3,p+1))} disabled={page===3} style={{...navBtn,opacity:page===3?0.3:1,padding:'1px 5px',fontSize:9}}>›</button>
         </div>
 
@@ -1704,12 +1704,12 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
             <div key={lane} style={{flex:1,display:'flex',alignItems:'stretch',gap:5,minHeight:0}}>
               {/* Lane label + VU */}
               <div style={{width:38,flexShrink:0,display:'flex',flexDirection:'column',justifyContent:'center',gap:1}}>
-                <span style={{fontSize:6,fontWeight:700,color:lc,letterSpacing:'0.14em',textTransform:'uppercase'}}>{lane}</span>
+                <span style={{fontSize:8,fontWeight:700,color:lc,letterSpacing:'0.14em',textTransform:'uppercase'}}>{lane}</span>
                 <div style={{height:3,borderRadius:2,background:'rgba(255,255,255,0.05)',overflow:'hidden'}}>
                   <div style={{height:'100%',width:`${vu*100}%`,background:lc,borderRadius:2,transition:'width 0.04s',boxShadow:`0 0 4px ${lc}`}}/>
                 </div>
                 {(lane==='bass'||lane==='synth')&&(
-                  <span style={{fontSize:5.5,color:'rgba(255,255,255,0.25)',letterSpacing:'0.04em'}}>{activeNotes[lane]}</span>
+                  <span style={{fontSize:7.5,color:'rgba(255,255,255,0.95)',letterSpacing:'0.04em'}}>{activeNotes[lane]}</span>
                 )}
               </div>
               {/* Step grid */}
@@ -1746,7 +1746,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
             const hasSynth=patterns.synth[idx]?.on;
             return(
               <div key={idx} style={{flex:1,textAlign:'center'}}>
-                {(hasBass||hasSynth)&&<span style={{fontSize:5,color:'rgba(255,255,255,0.22)',fontFamily:'Space Mono,monospace'}}>{hasBass?bn.replace(/[0-9]/g,''):sn.replace(/[0-9]/g,'')}</span>}
+                {(hasBass||hasSynth)&&<span style={{fontSize:8,color:'rgba(255,255,255,0.94)',fontFamily:'Space Mono,monospace'}}>{hasBass?bn.replace(/[0-9]/g,''):sn.replace(/[0-9]/g,'')}</span>}
               </div>
             );
           })}
@@ -1756,7 +1756,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
       {/* RIGHT — Macro knobs + scenes */}
       <div style={{width:compact?'100%':118,display:'flex',flexDirection:'column',gap:4,flexShrink:0,order:compact?3:3}}>
         {/* Main macro faders */}
-        <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',textTransform:'uppercase',marginBottom:1}}>MACROS</div>
+        <div style={{fontSize:8,color:'rgba(255,255,255,0.94)',letterSpacing:'0.18em',textTransform:'uppercase',marginBottom:1}}>MACROS</div>
         {[
           {label:'MASTER',v:master,s:setMaster,c:'#ffffff'},
           {label:'SPACE',v:space,s:setSpace,c:'#44ffcc'},
@@ -1768,8 +1768,8 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
         ].map(({label,v,s,c,min=0,max=1})=>(
           <div key={label} style={{display:'flex',flexDirection:'column',gap:1}}>
             <div style={{display:'flex',justifyContent:'space-between'}}>
-              <span style={{fontSize:6,letterSpacing:'0.08em',color:'rgba(255,255,255,0.3)',textTransform:'uppercase'}}>{label}</span>
-              <span style={{fontSize:6,color:c,fontFamily:'Space Mono,monospace'}}>{((v-min)/(max-min)*100).toFixed(0)}</span>
+              <span style={{fontSize:8,letterSpacing:'0.08em',color:'rgba(255,255,255,0.96)',textTransform:'uppercase'}}>{label}</span>
+              <span style={{fontSize:8,color:c,fontFamily:'Space Mono,monospace'}}>{((v-min)/(max-min)*100).toFixed(0)}</span>
             </div>
             <input type="range" min={min} max={max} step={0.01} value={v} onChange={e=>s(Number(e.target.value))} style={{width:'100%',color:c,accentColor:c,height:12}}/>
           </div>
@@ -1778,7 +1778,7 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
         <div style={{flex:1}}/>
 
         {/* Scenes */}
-        <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.18em',textTransform:'uppercase',marginBottom:1}}>SCENES</div>
+        <div style={{fontSize:8,color:'rgba(255,255,255,0.94)',letterSpacing:'0.18em',textTransform:'uppercase',marginBottom:1}}>SCENES</div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:2}}>
           {savedScenes.map((sc,i)=>(
             <div key={i} style={{display:'flex',flexDirection:'column',gap:1}}>
@@ -1786,12 +1786,12 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
                 padding:'4px 2px',borderRadius:2,border:`1px solid ${sc?gc+'44':'rgba(255,255,255,0.07)'}`,
                 background:sc?`${gc}0e`:'rgba(255,255,255,0.015)',
                 color:sc?gc:'rgba(255,255,255,0.22)',
-                fontSize:7,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace',
+                fontSize:8,fontWeight:700,cursor:'pointer',fontFamily:'Space Mono,monospace',
                 textAlign:'center',
               }}>
                 S{i+1}{sc?'◆':''}
               </button>
-              <button onClick={()=>saveScene(i)} style={{padding:'1px',borderRadius:2,border:'1px solid rgba(255,255,255,0.05)',background:'rgba(255,255,255,0.015)',color:'rgba(255,255,255,0.22)',fontSize:5.5,cursor:'pointer',fontFamily:'Space Mono,monospace',textAlign:'center'}}>SAVE</button>
+              <button onClick={()=>saveScene(i)} style={{padding:'1px',borderRadius:2,border:'1px solid rgba(255,255,255,0.05)',background:'rgba(255,255,255,0.015)',color:'rgba(255,255,255,0.94)',fontSize:7.5,cursor:'pointer',fontFamily:'Space Mono,monospace',textAlign:'center'}}>SAVE</button>
             </div>
           ))}
         </div>
@@ -1800,13 +1800,13 @@ function PerformView({genre,gc,isPlaying,currentSectionName,laneVU,patterns,bass
   );
 }
 
-const navBtn={padding:'1px 5px',borderRadius:2,border:'1px solid rgba(255,255,255,0.09)',background:'rgba(255,255,255,0.03)',color:'rgba(255,255,255,0.45)',fontSize:9,cursor:'pointer',fontFamily:'Space Mono,monospace'};
+const navBtn={padding:'1px 5px',borderRadius:2,border:'1px solid rgba(255,255,255,0.09)',background:'rgba(255,255,255,0.03)',color:'rgba(255,255,255,0.98)',fontSize:9,cursor:'pointer',fontFamily:'Space Mono,monospace'};
 
 function PresetSelect({label,value,options,onChange,accent='#ffffff',compact=false}){
   return(
     <label style={{display:'flex',flexDirection:'column',gap:2,minWidth:compact?112:124}}>
-      <span style={{fontSize:6,color:'rgba(255,255,255,0.28)',letterSpacing:'0.12em',textTransform:'uppercase'}}>{label}</span>
-      <select value={value} onChange={e=>onChange(e.target.value)} style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${accent}33`,color:accent,borderRadius:4,padding:compact?'4px 6px':'5px 7px',fontSize:7,fontFamily:'Space Mono,monospace',outline:'none'}}>
+      <span style={{fontSize:8,color:'rgba(255,255,255,0.95)',letterSpacing:'0.12em',textTransform:'uppercase'}}>{label}</span>
+      <select value={value} onChange={e=>onChange(e.target.value)} style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${accent}33`,color:accent,borderRadius:4,padding:compact?'4px 6px':'5px 7px',fontSize:8,fontFamily:'Space Mono,monospace',outline:'none'}}>
         {Object.entries(options).map(([key,preset])=><option key={key} value={key} style={{color:'#111',background:'#f2f2f2'}}>{preset.label}</option>)}
       </select>
     </label>
@@ -1831,11 +1831,11 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
       <div style={{flex:1,display:'flex',flexDirection:'column',gap:3,minWidth:0}}>
         {/* Grid header */}
         <div style={{display:'flex',alignItems:'center',gap:5,height:20,flexShrink:0}}>
-          <span style={{fontSize:7,color:'rgba(255,255,255,0.35)',letterSpacing:'0.1em'}}>{genre.toUpperCase()} · {modeName.toUpperCase()} · {currentSectionName.toUpperCase()}</span>
+          <span style={{fontSize:8,color:'rgba(255,255,255,0.97)',letterSpacing:'0.1em'}}>{genre.toUpperCase()} · {modeName.toUpperCase()} · {currentSectionName.toUpperCase()}</span>
           <div style={{flex:1}}/>
           <button onClick={undo} disabled={undoLen===0} style={{...navBtn,opacity:undoLen>0?1:0.3,fontSize:7}}>↩ ({undoLen})</button>
           <button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0} style={{...navBtn,opacity:page===0?0.3:1}}>‹</button>
-          <span style={{fontSize:7,color:'rgba(255,255,255,0.25)',fontFamily:'Space Mono,monospace'}}>pg {page+1}/4</span>
+          <span style={{fontSize:8,color:'rgba(255,255,255,0.95)',fontFamily:'Space Mono,monospace'}}>pg {page+1}/4</span>
           <button onClick={()=>setPage(p=>Math.min(3,p+1))} disabled={page===3} style={{...navBtn,opacity:page===3?0.3:1}}>›</button>
         </div>
 
@@ -1845,7 +1845,7 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
           return(
             <div key={lane} style={{flex:1,display:'flex',alignItems:'stretch',gap:4,minHeight:0}}>
               <div style={{width:36,flexShrink:0,display:'flex',flexDirection:'column',justifyContent:'center',gap:1}}>
-                <span style={{fontSize:6,fontWeight:700,color:lc,letterSpacing:'0.12em',textTransform:'uppercase'}}>{lane}</span>
+                <span style={{fontSize:8,fontWeight:700,color:lc,letterSpacing:'0.12em',textTransform:'uppercase'}}>{lane}</span>
                 <div style={{height:2,borderRadius:1,background:'rgba(255,255,255,0.05)',overflow:'hidden'}}>
                   <div style={{height:'100%',width:`${vu*100}%`,background:lc,borderRadius:1,transition:'width 0.04s'}}/>
                 </div>
@@ -1871,7 +1871,7 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
         {/* Note editor row */}
         <div style={{flexShrink:0,borderTop:'1px solid rgba(255,255,255,0.05)',paddingTop:4}}>
           <div style={{display:'flex',gap:4,marginBottom:3,alignItems:'center'}}>
-            <span style={{fontSize:7,color:'rgba(255,255,255,0.3)',letterSpacing:'0.12em'}}>NOTES</span>
+            <span style={{fontSize:8,color:'rgba(255,255,255,0.96)',letterSpacing:'0.12em'}}>NOTES</span>
             {['bass','synth'].map(l=>(
               <button key={l} onClick={()=>setNoteEditLane(l)} style={{...navBtn,border:`1px solid ${noteEditLane===l?LANE_CLR[l]:'rgba(255,255,255,0.1)'}`,color:noteEditLane===l?LANE_CLR[l]:'rgba(255,255,255,0.35)',fontSize:7}}>{l}</button>
             ))}
@@ -1885,7 +1885,7 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
               return(
                 <div key={idx} style={{opacity:isOn?1:0.2}}>
                   <button disabled={!isOn} onClick={()=>{if(!isOn)return;const next=notePool[(cur+1)%notePool.length];setNote(noteEditLane,idx,next);}}
-                    style={{width:'100%',padding:'2px 0',borderRadius:2,border:`1px solid ${isOn?lc+'44':'rgba(255,255,255,0.04)'}`,background:isOn?`${lc}1a`:'rgba(255,255,255,0.01)',color:isOn?lc:'rgba(255,255,255,0.2)',fontSize:6,cursor:isOn?'pointer':'default',fontFamily:'Space Mono,monospace',textAlign:'center'}}>
+                    style={{width:'100%',padding:'2px 0',borderRadius:2,border:`1px solid ${isOn?lc+'44':'rgba(255,255,255,0.04)'}`,background:isOn?`${lc}1a`:'rgba(255,255,255,0.01)',color:isOn?lc:'rgba(255,255,255,0.2)',fontSize:8,cursor:isOn?'pointer':'default',fontFamily:'Space Mono,monospace',textAlign:'center'}}>
                     {curNote||'—'}
                   </button>
                 </div>
@@ -1903,9 +1903,9 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
           <PresetSelect label='SYNTH' value={synthPreset} options={SOUND_PRESETS.synth} onChange={applySynthPreset} accent={gc} compact />
           <PresetSelect label='DRUM' value={drumPreset} options={SOUND_PRESETS.drum} onChange={applyDrumPreset} accent='#ffb347' compact />
           <PresetSelect label='PERF' value={performancePreset} options={SOUND_PRESETS.performance} onChange={applyPerformancePreset} accent='#7ee787' compact />
-          <button onClick={clearPattern} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(255,80,80,0.3)',background:'rgba(255,80,80,0.08)',color:'#ff8a8a',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>CLEAR</button><button onClick={()=>setPolySynth(v=>!v)} style={{padding:'4px 8px',borderRadius:3,border:`1px solid ${polySynth?gc:'rgba(255,255,255,0.08)'}`,background:polySynth?`${gc}18`:'rgba(255,255,255,0.03)',color:polySynth?gc:'rgba(255,255,255,0.35)',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>SYNTH POLY</button><button onClick={()=>setBassStack(v=>!v)} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(34,211,238,0.25)',background:bassStack?'rgba(34,211,238,0.12)':'rgba(255,255,255,0.03)',color:bassStack?'#22d3ee':'rgba(255,255,255,0.35)',fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>BASS STACK</button></div><div style={{display:'flex',borderBottom:'1px solid rgba(255,255,255,0.05)',flexShrink:0}}>
+          <button onClick={clearPattern} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(255,80,80,0.3)',background:'rgba(255,80,80,0.08)',color:'#ff8a8a',fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>CLEAR</button><button onClick={()=>setPolySynth(v=>!v)} style={{padding:'4px 8px',borderRadius:3,border:`1px solid ${polySynth?gc:'rgba(255,255,255,0.08)'}`,background:polySynth?`${gc}18`:'rgba(255,255,255,0.03)',color:polySynth?gc:'rgba(255,255,255,0.35)',fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>SYNTH POLY</button><button onClick={()=>setBassStack(v=>!v)} style={{padding:'4px 8px',borderRadius:3,border:'1px solid rgba(34,211,238,0.25)',background:bassStack?'rgba(34,211,238,0.12)':'rgba(255,255,255,0.03)',color:bassStack?'#22d3ee':'rgba(255,255,255,0.35)',fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace'}}>BASS STACK</button></div><div style={{display:'flex',borderBottom:'1px solid rgba(255,255,255,0.05)',flexShrink:0}}>
           {['mixer','synth','session'].map(t=>(
-            <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'5px 0',fontSize:6.5,fontWeight:700,letterSpacing:'0.1em',border:'none',background:'transparent',color:tab===t?gc:'rgba(255,255,255,0.22)',cursor:'pointer',borderBottom:tab===t?`2px solid ${gc}`:'2px solid transparent',textTransform:'uppercase',fontFamily:'Space Mono,monospace',transition:'color 0.1s'}}>{t}</button>
+            <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'5px 0',fontSize:7.5,fontWeight:700,letterSpacing:'0.1em',border:'none',background:'transparent',color:tab===t?gc:'rgba(255,255,255,0.22)',cursor:'pointer',borderBottom:tab===t?`2px solid ${gc}`:'2px solid transparent',textTransform:'uppercase',fontFamily:'Space Mono,monospace',transition:'color 0.1s'}}>{t}</button>
           ))}
         </div>
 
@@ -1930,21 +1930,21 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
             ].map(({l,v,s,c,min=0,max=1})=>(
               <div key={l}>
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:0}}>
-                  <span style={{fontSize:6,letterSpacing:'0.08em',color:'rgba(255,255,255,0.3)',textTransform:'uppercase'}}>{l}</span>
-                  <span style={{fontSize:6,color:c,fontFamily:'Space Mono,monospace'}}>{((v-min)/(max-min)*100).toFixed(0)}</span>
+                  <span style={{fontSize:8,letterSpacing:'0.08em',color:'rgba(255,255,255,0.96)',textTransform:'uppercase'}}>{l}</span>
+                  <span style={{fontSize:8,color:c,fontFamily:'Space Mono,monospace'}}>{((v-min)/(max-min)*100).toFixed(0)}</span>
                 </div>
                 <input type="range" min={min} max={max} step={(max-min)/200} value={v} onChange={e=>s(Number(e.target.value))} style={{width:'100%',accentColor:c,color:c,height:12}}/>
               </div>
             ))}
             <div>
-              <div style={{fontSize:6,color:'rgba(255,255,255,0.25)',letterSpacing:'0.1em',marginBottom:2,textTransform:'uppercase'}}>GROOVE PROFILE</div>
+              <div style={{fontSize:8,color:'rgba(255,255,255,0.95)',letterSpacing:'0.1em',marginBottom:2,textTransform:'uppercase'}}>GROOVE PROFILE</div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:2}}>
                 {['steady','broken','bunker','float'].map(gp=>(
                   <button key={gp} onClick={()=>setGrooveProfile(gp)} style={{
                     padding:'3px',borderRadius:2,border:`1px solid ${grooveProfile===gp?gc:'rgba(255,255,255,0.08)'}`,
                     background:grooveProfile===gp?`${gc}18`:'rgba(255,255,255,0.02)',
                     color:grooveProfile===gp?gc:'rgba(255,255,255,0.3)',
-                    fontSize:6.5,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.06em',textTransform:'uppercase',
+                    fontSize:7.5,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.06em',textTransform:'uppercase',
                   }}>{gp}</button>
                 ))}
               </div>
@@ -1952,18 +1952,18 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
           </>}
 
           {tab==='synth'&&<>
-            <div style={{fontSize:6,color:'rgba(255,255,255,0.25)',letterSpacing:'0.1em',marginBottom:2,textTransform:'uppercase'}}>SECTION GENERATOR</div>
+            <div style={{fontSize:8,color:'rgba(255,255,255,0.95)',letterSpacing:'0.1em',marginBottom:2,textTransform:'uppercase'}}>SECTION GENERATOR</div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:2}}>
               {Object.keys(SECTIONS).map(sec=>(
                 <button key={sec} onClick={()=>regenerateSection(sec)} style={{
                   padding:'5px 3px',borderRadius:2,border:`1px solid ${currentSectionName===sec?gc:'rgba(255,255,255,0.08)'}`,
                   background:currentSectionName===sec?`${gc}18`:'rgba(255,255,255,0.02)',
                   color:currentSectionName===sec?gc:'rgba(255,255,255,0.4)',
-                  fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.05em',textTransform:'uppercase',
+                  fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.05em',textTransform:'uppercase',
                 }}>{sec}</button>
               ))}
             </div>
-            <div style={{marginTop:3,fontSize:6.5,color:'rgba(255,255,255,0.18)',lineHeight:1.5}}>
+            <div style={{marginTop:3,fontSize:7.5,color:'rgba(255,255,255,0.92)',lineHeight:1.5}}>
               Click to regenerate with that section's feel.
             </div>
           </>}
@@ -1979,14 +1979,14 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
             {recordings.map((r,i)=>(
               <div key={i} style={{display:'flex',alignItems:'center',gap:3,padding:'3px 5px',borderRadius:3,background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.05)'}}>
                 <audio src={r.url} controls style={{flex:1,height:22,filter:'invert(1)',opacity:0.65}}/>
-                <a href={r.url} download={r.name} style={{color:gc,fontSize:6.5,textDecoration:'none',fontFamily:'Space Mono,monospace'}}>DL</a>
+                <a href={r.url} download={r.name} style={{color:gc,fontSize:7.5,textDecoration:'none',fontFamily:'Space Mono,monospace'}}>DL</a>
               </div>
             ))}
 
             <div style={{height:1,background:'rgba(255,255,255,0.06)',margin:'4px 0'}}/>
 
             {/* Scenes */}
-            <div style={{fontSize:7,color:'rgba(255,255,255,0.3)',letterSpacing:'0.12em',marginBottom:2,textTransform:'uppercase'}}>SCENES (6)</div>
+            <div style={{fontSize:8,color:'rgba(255,255,255,0.96)',letterSpacing:'0.12em',marginBottom:2,textTransform:'uppercase'}}>SCENES (6)</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:3}}>
               {savedScenes.map((sc,i)=>(
                 <div key={i} style={{display:'flex',flexDirection:'column',gap:1}}>
@@ -1996,7 +1996,7 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
                     color:sc?gc:'rgba(255,255,255,0.25)',
                     fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace',textAlign:'center',
                   }}>S{i+1}{sc?` ◆`:''}</button>
-                  <button onClick={()=>saveScene(i)} style={{padding:'2px',borderRadius:2,border:'1px solid rgba(255,255,255,0.07)',background:'rgba(255,255,255,0.02)',color:'rgba(255,255,255,0.3)',fontSize:6,cursor:'pointer',fontFamily:'Space Mono,monospace',textAlign:'center'}}>SAVE</button>
+                  <button onClick={()=>saveScene(i)} style={{padding:'2px',borderRadius:2,border:'1px solid rgba(255,255,255,0.07)',background:'rgba(255,255,255,0.02)',color:'rgba(255,255,255,0.96)',fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace',textAlign:'center'}}>SAVE</button>
                 </div>
               ))}
             </div>
@@ -2005,11 +2005,11 @@ function StudioView({genre,gc,patterns,bassLine,synthLine,laneLen,step,page,setP
 
             {/* Export/Import */}
             <button onClick={exportJSON} style={{padding:'7px',borderRadius:3,border:`1px solid ${gc}44`,background:`${gc}0d`,color:gc,fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.1em',textAlign:'center',textTransform:'uppercase'}}>EXPORT JSON</button>
-            <button onClick={()=>importRef.current?.click()} style={{padding:'7px',borderRadius:3,border:'1px solid rgba(255,255,255,0.12)',background:'rgba(255,255,255,0.03)',color:'rgba(255,255,255,0.5)',fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.1em',textAlign:'center',textTransform:'uppercase'}}>IMPORT JSON</button>
+            <button onClick={()=>importRef.current?.click()} style={{padding:'7px',borderRadius:3,border:'1px solid rgba(255,255,255,0.12)',background:'rgba(255,255,255,0.03)',color:'rgba(255,255,255,0.99)',fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace',letterSpacing:'0.1em',textAlign:'center',textTransform:'uppercase'}}>IMPORT JSON</button>
             <input ref={importRef} type="file" accept=".json" onChange={importJSON} style={{display:'none'}}/>
 
             <div style={{height:1,background:'rgba(255,255,255,0.06)',margin:'2px 0'}}/>
-            <div style={{fontSize:6.5,color:'rgba(255,255,255,0.2)',lineHeight:1.7,letterSpacing:'0.06em'}}>
+            <div style={{fontSize:7.5,color:'rgba(255,255,255,0.94)',lineHeight:1.7,letterSpacing:'0.06em'}}>
               SHORTCUTS<br/>
               SPACE = play/stop<br/>
               A=drop S=break D=build<br/>
@@ -2039,7 +2039,7 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
         {/* Genre card */}
         <div style={{padding:16,borderRadius:8,border:`1px solid ${gc}33`,background:`${gc}08`}}>
           <div style={{fontSize:18,fontWeight:700,color:gc,letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:4}}>{genre}</div>
-          <div style={{fontSize:9,color:'rgba(255,255,255,0.4)',letterSpacing:'0.08em',marginBottom:8}}>{gd.description}</div>
+          <div style={{fontSize:9,color:'rgba(255,255,255,0.98)',letterSpacing:'0.08em',marginBottom:8}}>{gd.description}</div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4}}>
             {[
               {l:'BPM',v:`${gd.bpm[0]}–${gd.bpm[1]}`},
@@ -2052,8 +2052,8 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
               {l:'BASS',v:gd.bassMode},
             ].map(({l,v})=>(
               <div key={l}>
-                <div style={{fontSize:6,color:'rgba(255,255,255,0.25)',letterSpacing:'0.12em',textTransform:'uppercase'}}>{l}</div>
-                <div style={{fontSize:9,color:'rgba(255,255,255,0.7)',fontFamily:'Space Mono,monospace'}}>{v}</div>
+                <div style={{fontSize:8,color:'rgba(255,255,255,0.95)',letterSpacing:'0.12em',textTransform:'uppercase'}}>{l}</div>
+                <div style={{fontSize:9,color:'rgba(255,255,255,1)',fontFamily:'Space Mono,monospace'}>{v}</div>
               </div>
             ))}
           </div>
@@ -2071,7 +2071,7 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
 
         {songActive&&(
           <div style={{padding:10,borderRadius:6,border:'1px solid rgba(255,255,255,0.08)',background:'rgba(255,255,255,0.02)'}}>
-            <div style={{fontSize:7,color:'rgba(255,255,255,0.3)',letterSpacing:'0.12em',marginBottom:6,textTransform:'uppercase'}}>ARC PROGRESS</div>
+            <div style={{fontSize:8,color:'rgba(255,255,255,0.96)',letterSpacing:'0.12em',marginBottom:6,textTransform:'uppercase'}}>ARC PROGRESS</div>
             <div style={{display:'flex',gap:3,flexWrap:'wrap'}}>
               {songArc.map((s,i)=>{
                 const sc=SECTION_COLORS[s]||'#ffffff';
@@ -2091,12 +2091,12 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
         )}
 
         {/* Preset arcs */}
-        <div style={{fontSize:7,color:'rgba(255,255,255,0.25)',letterSpacing:'0.15em',textTransform:'uppercase',marginTop:4}}>PRESET ARCS</div>
+        <div style={{fontSize:8,color:'rgba(255,255,255,0.95)',letterSpacing:'0.15em',textTransform:'uppercase',marginTop:4}}>PRESET ARCS</div>
         {SONG_ARCS.map((arc,i)=>(
           <button key={i} onClick={()=>{}} style={{
             padding:'8px 10px',borderRadius:4,border:'1px solid rgba(255,255,255,0.08)',
-            background:'rgba(255,255,255,0.02)',color:'rgba(255,255,255,0.45)',
-            fontSize:7,cursor:'pointer',fontFamily:'Space Mono,monospace',textAlign:'left',
+            background:'rgba(255,255,255,0.02)',color:'rgba(255,255,255,0.98)',
+            fontSize:8,cursor:'pointer',fontFamily:'Space Mono,monospace',textAlign:'left',
             letterSpacing:'0.04em',lineHeight:1.4,
           }}>
             {arc.join(' → ')}
@@ -2106,7 +2106,7 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
 
       {/* RIGHT — Section library + direct trigger */}
       <div style={{flex:1,display:'flex',flexDirection:'column',gap:6}}>
-        <div style={{fontSize:7,color:'rgba(255,255,255,0.25)',letterSpacing:'0.2em',textTransform:'uppercase'}}>SECTION LIBRARY — CLICK TO TRIGGER</div>
+        <div style={{fontSize:8,color:'rgba(255,255,255,0.95)',letterSpacing:'0.2em',textTransform:'uppercase'}}>SECTION LIBRARY — CLICK TO TRIGGER</div>
         <div style={{display:'grid',gridTemplateColumns:phone?'repeat(2,1fr)':'repeat(4,1fr)',gap:6}}>
           {Object.entries(SECTIONS).map(([name,data])=>{
             const sc=SECTION_COLORS[name]||'#ffffff';
@@ -2121,7 +2121,7 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
                 boxShadow:isActive?`0 0 16px ${sc}44`:'none',
               }}>
                 <div style={{fontSize:13,fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:6}}>{name}</div>
-                <div style={{fontSize:7,opacity:0.7,lineHeight:1.6}}>
+                <div style={{fontSize:8,opacity:0.7,lineHeight:1.6}}>
                   {`k:${Math.round(data.kM*100)}% h:${Math.round(data.hM*100)}%`}<br/>
                   {`b:${Math.round(data.bM*100)}% sy:${Math.round(data.syM*100)}%`}<br/>
                   {`len:${data.lb}x vel:${data.vel}`}<br/>
@@ -2134,15 +2134,15 @@ function SongView({genre,gc,songArc,arcIdx,songActive,startSongArc,stopSongArc,c
 
         {/* Current section info */}
         <div style={{padding:12,borderRadius:6,border:'1px solid rgba(255,255,255,0.06)',background:'rgba(255,255,255,0.02)',marginTop:4}}>
-          <div style={{fontSize:7,color:'rgba(255,255,255,0.25)',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:6}}>CURRENT SESSION</div>
+          <div style={{fontSize:8,color:'rgba(255,255,255,0.95)',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:6}}>CURRENT SESSION</div>
           <div style={{display:'grid',gridTemplateColumns:phone?'repeat(2,1fr)':'repeat(5,1fr)',gap:8}}>
             {[
               {l:'GENRE',v:genre},{l:'SECTION',v:currentSectionName},{l:'MODE',v:modeName},
               {l:'ARP',v:arpeMode},{l:'STATUS',v:songActive?`arc[${arcIdx+1}/${songArc.length}]`:'manual'},
             ].map(({l,v})=>(
               <div key={l}>
-                <div style={{fontSize:6,color:'rgba(255,255,255,0.2)',letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:2}}>{l}</div>
-                <div style={{fontSize:9,color:gc,fontFamily:'Space Mono,monospace',fontWeight:700}}>{v}</div>
+                <div style={{fontSize:8,color:'rgba(255,255,255,0.94)',letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:2}}>{l}</div>
+                <div style={{fontSize:9,color:gc,fontFamily:'Space Mono,monospace',fontWeight:700}>{v}</div>
               </div>
             ))}
           </div>
