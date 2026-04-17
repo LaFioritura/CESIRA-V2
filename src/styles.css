@@ -1,0 +1,84 @@
+:root {
+  --bg: #070b11;
+  --panel: rgba(16, 22, 34, 0.88);
+  --panel-border: rgba(135, 160, 255, 0.14);
+  --text: #eff4ff;
+  --muted: #8fa0c6;
+  --accent: #8f73ff;
+  --accent-2: #00d9b9;
+  --danger: #ff6d91;
+}
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; margin: 0; background: radial-gradient(circle at top, #101728, #06080f 60%); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+button, input, select { font: inherit; }
+button, select, input { border: 1px solid var(--panel-border); background: rgba(255,255,255,0.04); color: var(--text); border-radius: 12px; }
+button { cursor: pointer; padding: 0.75rem 1rem; transition: 160ms ease; }
+button:hover { transform: translateY(-1px); border-color: rgba(143,115,255,.5); }
+button.primary, .action-btn.primary { background: linear-gradient(135deg, var(--accent), #4cb8ff); border: none; }
+input[type='range'] { width: 100%; }
+input[type='number'], input[type='text'], .project-meta input { padding: 0.75rem 0.85rem; }
+select { padding: 0.75rem 0.85rem; }
+.app-shell { padding: 1.5rem; max-width: 1500px; margin: 0 auto; }
+.topbar, .toolbar, .panel, .modal { backdrop-filter: blur(18px); }
+.topbar, .toolbar { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1rem; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 22px; padding: 1rem 1.2rem; }
+.eyebrow { text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.72rem; color: var(--muted); margin: 0 0 0.3rem; }
+h1 { margin: 0; font-size: 2rem; }
+.project-meta { display: flex; gap: 1rem; align-items: center; }
+.transport-row { display: flex; gap: 0.6rem; }
+.toolbar { flex-wrap: wrap; }
+.toolbar-block { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+.toolbar-block label, .field { display: grid; gap: 0.35rem; color: var(--muted); font-size: 0.9rem; }
+.view-switches button.active, .strip-buttons button.active { background: rgba(143,115,255,.2); border-color: rgba(143,115,255,.5); }
+.main-stage { min-height: 65vh; }
+.view-grid { display: grid; gap: 1rem; }
+.perform-grid { grid-template-columns: 1.2fr 1fr; }
+.perform-grid .panel:last-child { grid-column: 1 / -1; }
+.studio-grid, .song-grid { grid-template-columns: 1fr; }
+.panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 24px; padding: 1rem 1.1rem; }
+.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.9rem; }
+.panel-header h3 { margin: 0; font-size: 1rem; }
+.panel-body { display: grid; gap: 1rem; }
+.pill { border: 1px solid rgba(0,217,185,.35); color: #9dfded; border-radius: 999px; padding: 0.3rem 0.7rem; font-size: 0.8rem; }
+.knob-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.9rem; }
+.knob { display: grid; gap: 0.35rem; padding: 0.9rem; background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.04); border-radius: 18px; }
+.knob strong { color: var(--accent-2); }
+.actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.8rem; }
+.action-btn { min-height: 54px; }
+.pulse-meter { display: grid; grid-template-columns: repeat(16, 1fr); gap: 0.4rem; }
+.pulse-cell { height: 42px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.04); }
+.pulse-cell.on { background: linear-gradient(180deg, rgba(0,217,185,.95), rgba(143,115,255,.95)); box-shadow: 0 0 20px rgba(143,115,255,.35); }
+.status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; }
+.status-grid div { padding: 0.9rem; border-radius: 16px; background: rgba(255,255,255,.03); display: grid; gap: 0.25rem; }
+.status-grid span { color: var(--muted); font-size: 0.85rem; }
+.step-row { display: grid; grid-template-columns: 82px 1fr; gap: 0.8rem; align-items: center; }
+.lane-name { text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-size: 0.78rem; }
+.steps-grid { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 0.4rem; }
+.step { height: 62px; padding: 0.2rem; display: grid; place-items: center; background: rgba(255,255,255,.04); }
+.step span { font-size: 0.7rem; color: var(--muted); }
+.step em { font-style: normal; font-size: 0.72rem; }
+.step.active { background: linear-gradient(180deg, rgba(143,115,255,.35), rgba(76,184,255,.25)); }
+.step.current { outline: 2px solid rgba(0,217,185,.85); }
+.field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.9rem; }
+.mixer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.8rem; }
+.mixer-strip { display: grid; gap: 0.7rem; padding: 0.9rem; border-radius: 18px; background: rgba(255,255,255,.03); }
+.strip-buttons { display: flex; gap: 0.5rem; }
+.arrangement-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.7rem; }
+.segment.active { background: linear-gradient(135deg, rgba(143,115,255,.5), rgba(0,217,185,.25)); }
+.import-btn { position: relative; overflow: hidden; padding: 0.75rem 1rem; border: 1px solid var(--panel-border); border-radius: 12px; }
+.import-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(3,5,10,.72); z-index: 50; padding: 1rem; }
+.modal { max-width: 620px; width: 100%; background: rgba(10,14,24,.95); border: 1px solid var(--panel-border); border-radius: 28px; padding: 2rem; }
+.onboarding ul { color: var(--muted); line-height: 1.7; }
+.splash-card { text-align: center; }
+.splash-card h1 { font-size: 4.2rem; margin-bottom: 0.8rem; }
+@media (max-width: 1100px) {
+  .perform-grid { grid-template-columns: 1fr; }
+  .status-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 780px) {
+  .app-shell { padding: 1rem; }
+  .topbar, .toolbar { flex-direction: column; align-items: stretch; }
+  .project-meta { flex-direction: column; align-items: stretch; }
+  .step-row { grid-template-columns: 1fr; }
+  .steps-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+}
