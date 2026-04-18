@@ -27,6 +27,7 @@ export function useStore() {
   const genreRef = useRef('techno')
   const [sectionName, setSectionName] = useState('groove')
   const [modeName, setModeName] = useState('minor')
+  const modeNameRef = useRef('minor')
   const [arpMode, setArpMode] = useState('up')
   const arpModeRef = useRef('up')
   const progressionRef = useRef(CHORD_PROGS.minor[0])
@@ -118,7 +119,7 @@ export function useStore() {
     const gd=GENRES[g]; const mName=pick(gd.modes)
     const prog=pick(CHORD_PROGS[mName]||CHORD_PROGS.minor)
     const aMode=pick(['up','down','updown','outside'])
-    genreRef.current=g; setGenreState(g); setModeName(mName); setArpMode(aMode)
+    genreRef.current=g; setGenreState(g); setModeName(mName); modeNameRef.current=mName; setArpMode(aMode)
     progressionRef.current=prog; arpModeRef.current=aMode
     setBpm(Math.round(gd.bpm[0]+rnd()*(gd.bpm[1]-gd.bpm[0])))
     setParamsBatch({space:gd.fxProfile.space,tone:gd.fxProfile.tone,drive:gd.fxProfile.drive*2,noiseMix:gd.chaos*0.4,compress:gd.density*0.4})
@@ -214,7 +215,7 @@ export function useStore() {
   const serialize = useCallback(()=>({v:3,genre:genreRef.current,modeName,bpm:bpmRef.current,sectionName,arpMode:arpModeRef.current,...paramsRef.current,projectName,patterns:patternsRef.current,bassLine:bassRef.current,synthLine:synthRef.current,laneLen:laneLenRef.current}),[modeName,sectionName,projectName])
   const applySnap = useCallback((snap)=>{
     if(!snap||snap.v!==3){setStatus('Incompatible session (need v3)');return}
-    genreRef.current=snap.genre||'techno'; setGenreState(snap.genre||'techno'); setModeName(snap.modeName||'minor')
+    genreRef.current=snap.genre||'techno'; setGenreState(snap.genre||'techno'); setModeName(snap.modeName||'minor'); modeNameRef.current=snap.modeName||'minor'
     setBpm(snap.bpm||128); setSectionName(snap.sectionName||'groove'); setArpMode(snap.arpMode||'up'); arpModeRef.current=snap.arpMode||'up'
     const pp={}; Object.keys(DEFAULT_PARAMS).forEach(k=>{if(snap[k]!==undefined)pp[k]=snap[k]}); setParamsBatch(pp)
     if(snap.projectName)setProjectName(snap.projectName)
@@ -234,7 +235,7 @@ export function useStore() {
 
   return {
     isPlaying,setIsPlaying,isPlayingRef,step,setStep,bpm,setBpm,bpmRef,
-    genre,genreRef,sectionName,setSectionName,modeName,arpMode,arpModeRef,view,setView,progressionRef,
+    genre,genreRef,sectionName,setSectionName,modeName,modeNameRef,arpMode,arpModeRef,view,setView,progressionRef,
     patterns,patternsRef,bassLine,bassRef,synthLine,synthRef,laneLen,laneLenRef,lastBassRef,
     params,paramsRef,setParam,setParamsBatch,
     songArc,arcIdx,songActive,songActiveRef,arcRef,arcIdxRef,barCountRef,onBarElapsed,startSongArc,stopSongArc,

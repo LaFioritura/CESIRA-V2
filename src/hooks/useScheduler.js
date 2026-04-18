@@ -27,8 +27,8 @@ export function useScheduler(store) {
     const accent = si%4===0 ? 1 : 0.85
 
     const drumP = { kickFreq:gd.kickFreq||90, kickEnd:gd.kickEnd||40, kickDecay:p.drumDecay, noiseMix:p.noiseMix, bassSubAmt:p.bassSubAmt, noiseColor:gd.noiseColor||'white', drumDecay:p.drumDecay, compress:p.compress }
-    const bassP  = { bassFilter:p.bassFilter, bassSubAmt:p.bassSubAmt, fmIdx:p.fmIdx, tone:p.tone, compress:p.compress, bassMode:gd.bassMode, modeName:store.modeName, bassStack:p.bassStack, bpmRef:store.bpmRef.current }
-    const synthP = { synthFilter:p.synthFilter, space:p.space, tone:p.tone, compress:p.compress, fmIdx:p.fmIdx, synthMode:gd.synthMode, modeName:store.modeName, polySynth:p.polySynth, bpmRef:store.bpmRef.current }
+    const bassP  = { bassFilter:p.bassFilter, bassSubAmt:p.bassSubAmt, fmIdx:p.fmIdx, tone:p.tone, compress:p.compress, bassMode:gd.bassMode, modeName:store.modeNameRef.current, bassStack:p.bassStack, bpmRef:store.bpmRef.current }
+    const synthP = { synthFilter:p.synthFilter, space:p.space, tone:p.tone, compress:p.compress, fmIdx:p.fmIdx, synthMode:gd.synthMode, modeName:store.modeNameRef.current, polySynth:p.polySynth, bpmRef:store.bpmRef.current }
 
     for (const lane of ['kick','snare','hat','bass','synth']) {
       const len = ll[lane] || 16

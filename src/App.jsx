@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef, useCallback, useState } from 'react'
 import { useStore } from './state/useStore.js'
 import { useScheduler } from './hooks/useScheduler.js'
 import { initAudio, startRecording, applyFx, getCtx } from './engine/audio.js'
@@ -10,30 +10,44 @@ import StudioView  from './components/views/StudioView.jsx'
 import SongView    from './components/views/SongView.jsx'
 
 export default function App() {
-  const store = useStore()
+  const store     = useStore()
   const scheduler = useScheduler(store)
 
-  // ── Apply FX whenever audio params change
+  // ── Sync FX params to audio engine whenever they change
+  const prevFxRef = useRef({})
   useEffect(() => {
-    if (getCtx()) applyFx({ space:store.params.space, tone:store.params.tone, drive:store.params.drive, compress:store.params.compress, master:store.params.master, genre:store.genre })
+    const { space, tone, drive, compress, master } = store.params
+    const genre = store.genre
+    const cur = { space, tone, drive, compress, master, genre }
+    const prev = prevFxRef.current
+    const changed = Object.keys(cur).some(k => cur[k] !== prev[k])
+    if (changed && getCtx()) {
+      applyFx(cur)
+      prevFxRef.current = cur
+    }
   }, [store.params.space, store.params.tone, store.params.drive, store.params.compress, store.params.master, store.genre])
 
-  // ── MIDI init
+  // ── MIDI
   useEffect(() => {
     if (!navigator.requestMIDIAccess) return
     navigator.requestMIDIAccess()
-      .then(m => { store.midiRef.current = m; window._midiOut = [...m.outputs.values()][0]; store.setMidiOk(true) })
+      .then(m => {
+        store.midiRef.current = m
+        window._midiOut = [...m.outputs.values()][0] || null
+        store.setMidiOk(true)
+      })
       .catch(() => {})
   }, []) // eslint-disable-line
 
-  // ── Recording helpers (passed down)
+  // ── Recording
   const startRec = useCallback(async () => {
     await initAudio()
     if (store.recState === 'recording') return
     store.setRecState('recording')
     store.setStatus('● REC')
     const rec = startRecording((url, ext) => {
-      store.setRecordings(p => [{ url, name:`${store.projectName.replace(/\s+/g,'-')}-take-${p.length+1}.${ext}`, time: new Date().toLocaleTimeString() }, ...p.slice(0,7)])
+      const name = `${store.projectName.replace(/\s+/g, '-')}-take-${store.recordings.length + 1}.${ext}`
+      store.setRecordings(p => [{ url, name, time: new Date().toLocaleTimeString() }, ...p.slice(0, 7)])
       store.setRecState('idle')
       store.setStatus('Take saved')
     })
@@ -48,32 +62,33 @@ export default function App() {
   }, [store])
 
   // ── Autopilot
-  const runAutopilot = useCallback(() => {
+  const autopilotCb = useCallback(() => {
     if (!store.autopilotRef.current) return
     const r = Math.random()
     const intensity = store.autopilotIntensity
-    if      (r < 0.25*intensity) store.perfActions.mutate()
-    else if (r < 0.40*intensity) store.perfActions.shiftArp()
-    else if (r < 0.55)           store.regenerateSection(store.sectionName)
-    else if (r < 0.65*intensity) store.perfActions.thinOut()
-    else if (r < 0.75*intensity) store.perfActions.thicken()
-    else if (r < 0.82)           store.perfActions.reharmonize()
-    if (Math.random() < 0.15*intensity) {
+    const pa = store.perfActions
+    if      (r < 0.25 * intensity) pa.mutate()
+    else if (r < 0.40 * intensity) pa.shiftArp()
+    else if (r < 0.55)             store.regenerateSection(store.sectionName)
+    else if (r < 0.65 * intensity) pa.thinOut()
+    else if (r < 0.75 * intensity) pa.thicken()
+    else if (r < 0.82)             pa.reharmonize()
+    if (Math.random() < 0.15 * intensity) {
       const secs = ['drop','break','build','groove','tension','fill']
-      store.triggerSection(secs[Math.floor(Math.random()*secs.length)])
+      store.triggerSection(secs[Math.floor(Math.random() * secs.length)])
     }
-    const delay = (8 + Math.random()*16) * (1 - intensity*0.4) * 1000 * (240/store.bpm)
-    store.autopilotTimerRef.current = setTimeout(runAutopilot, delay)
+    const delay = (8 + Math.random() * 16) * (1 - intensity * 0.4) * 1000 * (240 / store.bpm)
+    store.autopilotTimerRef.current = setTimeout(autopilotCb, delay)
   }, [store]) // eslint-disable-line
 
   useEffect(() => {
     if (store.autopilot) {
       store.setStatus('Autopilot engaged')
-      const delay = (4 + Math.random()*8) * 1000 * (240/store.bpm)
-      store.autopilotTimerRef.current = setTimeout(runAutopilot, delay)
+      const delay = (4 + Math.random() * 8) * 1000 * (240 / store.bpm)
+      store.autopilotTimerRef.current = setTimeout(autopilotCb, delay)
     } else {
       if (store.autopilotTimerRef.current) clearTimeout(store.autopilotTimerRef.current)
-      store.setStatus('Autopilot off')
+      if (store.autopilot === false) store.setStatus('Autopilot off')
     }
     return () => { if (store.autopilotTimerRef.current) clearTimeout(store.autopilotTimerRef.current) }
   }, [store.autopilot]) // eslint-disable-line
@@ -81,30 +96,32 @@ export default function App() {
   // ── Keyboard shortcuts
   useEffect(() => {
     const onKey = e => {
-      if (e.target.tagName === 'INPUT') return
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return
       const pa = store.perfActions
       switch (e.code) {
         case 'Space': e.preventDefault(); scheduler.toggle(); break
-        case 'KeyA':  pa.drop();          break
-        case 'KeyS':  pa.break();         break
-        case 'KeyD':  pa.build();         break
-        case 'KeyF':  pa.groove();        break
-        case 'KeyG':  pa.tension();       break
-        case 'KeyH':  pa.fill();          break
-        case 'KeyM':  pa.mutate();        break
+        case 'KeyA':  pa.drop();    break
+        case 'KeyS':  pa.break();   break
+        case 'KeyD':  pa.build();   break
+        case 'KeyF':  pa.groove();  break
+        case 'KeyG':  pa.tension(); break
+        case 'KeyH':  pa.fill();    break
+        case 'KeyM':  pa.mutate();  break
         case 'KeyR':  store.regenerateSection(store.sectionName); break
         case 'KeyP':  store.setAutopilot(v => !v); break
-        case 'KeyT':  store.tapTempo();   break
-        case 'KeyZ':  if (e.metaKey||e.ctrlKey) { e.preventDefault(); store.undo() } break
+        case 'KeyT':  store.tapTempo(); break
+        case 'KeyZ':
+          if (e.metaKey || e.ctrlKey) { e.preventDefault(); store.undo() }
+          break
         default: break
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [store.sectionName, scheduler.toggle]) // eslint-disable-line
+  }, [scheduler, store]) // eslint-disable-line
 
-  // ── Responsive
-  const [viewport, setViewport] = React.useState(window.innerWidth)
+  // ── Responsive layout
+  const [viewport, setViewport] = useState(window.innerWidth)
   useEffect(() => {
     const fn = () => setViewport(window.innerWidth)
     window.addEventListener('resize', fn)
@@ -113,10 +130,12 @@ export default function App() {
   const compact = viewport < 1180
   const phone   = viewport < 820
 
-  const gc = GENRE_CLR[store.genre] || '#ff4444'
-
-  // Enrich store with recording helpers
-  const enrichedStore = { ...store, _startRec: startRec, _stopRec: stopRec }
+  // Enrich store with recording helpers passed to children
+  const enriched = {
+    ...store,
+    _startRec: store.recState === 'recording' ? stopRec : startRec,
+    _stopRec:  stopRec,
+  }
 
   return (
     <div style={{
@@ -124,15 +143,15 @@ export default function App() {
       fontFamily:"'DM Sans',sans-serif", display:'flex', flexDirection:'column',
       overflow:'hidden', userSelect:'none', position:'relative',
     }}>
-      {/* Scanline overlay */}
+      {/* Scanline texture */}
       <div style={{ position:'fixed', inset:0, backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px)', pointerEvents:'none', zIndex:999 }} />
 
-      <TopBar     store={enrichedStore} scheduler={scheduler} phone={phone} compact={compact} />
-      <ContextBar store={enrichedStore} phone={phone} />
+      <TopBar     store={enriched} scheduler={scheduler} phone={phone} />
+      <ContextBar store={enriched} phone={phone} />
 
-      {store.view === 'perform' && <PerformView store={enrichedStore} compact={compact} phone={phone} />}
-      {store.view === 'studio'  && <StudioView  store={enrichedStore} compact={compact} phone={phone} />}
-      {store.view === 'song'    && <SongView    store={enrichedStore} compact={compact} phone={phone} />}
+      {store.view === 'perform' && <PerformView store={enriched} compact={compact} phone={phone} />}
+      {store.view === 'studio'  && <StudioView  store={enriched} compact={compact} phone={phone} />}
+      {store.view === 'song'    && <SongView    store={enriched} compact={compact} phone={phone} />}
     </div>
   )
 }

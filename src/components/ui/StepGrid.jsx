@@ -1,7 +1,7 @@
 // ─── CESIRA V3 — Step Grid ────────────────────────────────────────────────────
 import React from 'react'
 import { LANE_CLR } from '../../engine/constants.js'
-import { VU } from './shared.js'
+import { VU } from './shared.jsx'
 
 export default function StepGrid({ patterns, bassLine, synthLine, laneLen, step, page, isPlaying, toggleCell, activeNotes, showNotes=false, setNote, notePool }) {
   const PAGE = 16
